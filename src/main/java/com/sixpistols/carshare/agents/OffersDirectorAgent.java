@@ -8,6 +8,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 
 public class OffersDirectorAgent extends Agent {
+    @Override
     protected void setup() {
         System.out.println("Cześć, tu offers-director: "+getAID().getName()+" się zalogował.");
         DFAgentDescription dfd = new DFAgentDescription();
@@ -25,4 +26,15 @@ public class OffersDirectorAgent extends Agent {
 
         addBehaviour(new ReceiveMessageBehaviour(this, 2000));
     }
+    @Override
+    protected void takeDown() {
+        try {
+            DFService.deregister(this);
+        }
+        catch (FIPAException fe) {
+            fe.printStackTrace();
+        }
+        System.out.println(getAID().getName()+" : zawijam sie stad, narka");
+    }
+
 }
