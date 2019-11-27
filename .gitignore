@@ -1,5 +1,10 @@
-/.idea/
 /carshare.iml
 /APDescription.txt
 /MTPs-Main-Container.txt
 /target
+/.idea/uiDesigner.xml
+/.idea/$PRODUCT_WORKSPACE_FILE$
+/.idea/.gitignore
+/.idea/.name
+/.idea/libraries/
+/.idea/sonarlint/
