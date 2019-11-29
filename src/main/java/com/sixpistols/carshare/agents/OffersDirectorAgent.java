@@ -10,7 +10,7 @@ import jade.domain.FIPAException;
 public class OffersDirectorAgent extends Agent {
     @Override
     protected void setup() {
-        System.out.println("Cześć, tu offers-director: "+getAID().getName()+" się zalogował.");
+        System.out.println("Cześć, tu offers-director: " + getAID().getName() + " się zalogował.");
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
@@ -19,22 +19,21 @@ public class OffersDirectorAgent extends Agent {
         dfd.addServices(sd);
         try {
             DFService.register(this, dfd);
-        }
-        catch (FIPAException fe) {
+        } catch (FIPAException fe) {
             fe.printStackTrace();
         }
 
         addBehaviour(new ReceiveMessageBehaviour(this, 2000));
     }
+
     @Override
     protected void takeDown() {
         try {
             DFService.deregister(this);
-        }
-        catch (FIPAException fe) {
+        } catch (FIPAException fe) {
             fe.printStackTrace();
         }
-        System.out.println(getAID().getName()+" : zawijam sie stad, narka");
+        System.out.println(getAID().getName() + " : zawijam sie stad, narka");
     }
 
 }

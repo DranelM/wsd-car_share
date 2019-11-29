@@ -4,7 +4,6 @@ import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
-
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -13,10 +12,11 @@ import jade.lang.acl.ACLMessage;
 
 public class DriverAgent extends Agent {
     AID[] currentOffersDirectors;
+
     @Override
     protected void setup() {
         // Printout a welcome message
-        System.out.println("Cześć, tu kierowca: "+getAID().getName()+" się zalogował.");
+        System.out.println("Cześć, tu kierowca: " + getAID().getName() + " się zalogował.");
 
         addBehaviour(new TickerBehaviour(this, 10000) {
             @Override
@@ -34,8 +34,7 @@ public class DriverAgent extends Agent {
                         System.out.println(myAgent.getAID().getName() + " found director: " + offersDirectors[i].getName());
                     }
                     currentOffersDirectors = offersDirectors;
-                }
-                catch (FIPAException fe) {
+                } catch (FIPAException fe) {
                     fe.printStackTrace();
                 }
             }
@@ -46,7 +45,7 @@ public class DriverAgent extends Agent {
                 if (currentOffersDirectors == null) return;
 
                 ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-                for(AID offerDirector : currentOffersDirectors){
+                for (AID offerDirector : currentOffersDirectors) {
                     msg.addReceiver(offerDirector);
                 }
                 msg.setContent("Jarzyna miał urodziny, jadę z Wawra na Młociny ;)");

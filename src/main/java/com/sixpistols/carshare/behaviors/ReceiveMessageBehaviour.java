@@ -1,7 +1,6 @@
 package com.sixpistols.carshare.behaviors;
 
 import jade.core.Agent;
-import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 
