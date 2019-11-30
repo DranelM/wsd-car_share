@@ -29,6 +29,7 @@ public class LegalAdvisorAgent extends Agent {
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         dfd.addServices(getServiceAccountVerifier());
+        dfd.addServices(getServicePaymentExecutor());
         try {
             DFService.register(this, dfd);
         } catch (FIPAException fe) {
@@ -39,6 +40,14 @@ public class LegalAdvisorAgent extends Agent {
     private ServiceDescription getServiceAccountVerifier() {
         ServiceDescription sd = new ServiceDescription();
         String type = ServiceType.AccountVerifier.getType();
+        sd.setType(type);
+        sd.setName("Warsaw-" + type);
+        return sd;
+    }
+
+    private ServiceDescription getServicePaymentExecutor() {
+        ServiceDescription sd = new ServiceDescription();
+        String type = ServiceType.PaymentExecutor.getType();
         sd.setType(type);
         sd.setName("Warsaw-" + type);
         return sd;

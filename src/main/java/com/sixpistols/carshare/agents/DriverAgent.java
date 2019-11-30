@@ -1,6 +1,7 @@
 package com.sixpistols.carshare.agents;
 
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
+import com.sixpistols.carshare.services.ServiceType;
 import jade.core.AID;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
@@ -20,7 +21,7 @@ public class DriverAgent extends UserAgent {
                 System.out.println(myAgent.getAID().getName() + " seeks for offers directors");
                 DFAgentDescription template = new DFAgentDescription();
                 ServiceDescription sd = new ServiceDescription();
-                sd.setType("offers-director");
+                sd.setType(ServiceType.OfferMatcher.getType());
                 template.addServices(sd);
                 try {
                     DFAgentDescription[] result = DFService.search(myAgent, template);
