@@ -2,7 +2,6 @@ package com.sixpistols.carshare.agents;
 
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import jade.core.AID;
-import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -10,13 +9,11 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 
-public class DriverAgent extends Agent {
+public class DriverAgent extends UserAgent {
     AID[] currentOffersDirectors;
 
     @Override
-    protected void setup() {
-        System.out.println(getAID().getName() + ": Start");
-
+    protected void afterLoginSucceeded() {
         addBehaviour(new TickerBehaviour(this, 10000) {
             @Override
             protected void onTick() {

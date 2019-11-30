@@ -4,6 +4,7 @@ import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import com.sixpistols.carshare.messages.LoginToken;
 import com.sixpistols.carshare.messages.NewUserData;
 import com.sixpistols.carshare.messages.UserCredentials;
+import com.sixpistols.carshare.services.ServiceType;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.DFService;
@@ -27,8 +28,7 @@ public class LegalAdvisorAgent extends Agent {
     private void registerServices() {
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
-        dfd.addServices(getServiceCreateAccount());
-        dfd.addServices(getServiceAuthorize());
+        dfd.addServices(getServiceAccountVerifier());
         try {
             DFService.register(this, dfd);
         } catch (FIPAException fe) {
@@ -36,17 +36,9 @@ public class LegalAdvisorAgent extends Agent {
         }
     }
 
-    private ServiceDescription getServiceCreateAccount() {
+    private ServiceDescription getServiceAccountVerifier() {
         ServiceDescription sd = new ServiceDescription();
-        String type = ServiceType.AccountVerifierCreateAccount.getType();
-        sd.setType(type);
-        sd.setName("Warsaw-" + type);
-        return sd;
-    }
-
-    private ServiceDescription getServiceAuthorize() {
-        ServiceDescription sd = new ServiceDescription();
-        String type = ServiceType.AccountVerifierAuthorize.getType();
+        String type = ServiceType.AccountVerifier.getType();
         sd.setType(type);
         sd.setName("Warsaw-" + type);
         return sd;

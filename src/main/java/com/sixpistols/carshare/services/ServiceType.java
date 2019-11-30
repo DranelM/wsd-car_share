@@ -1,8 +1,7 @@
-package com.sixpistols.carshare.agents;
+package com.sixpistols.carshare.services;
 
 public enum ServiceType {
-    AccountVerifierCreateAccount("account-verifier-create-account"),
-    AccountVerifierAuthorize("account-verifier-authorize");
+    AccountVerifier("account-verifier");
 
     String type;
 
