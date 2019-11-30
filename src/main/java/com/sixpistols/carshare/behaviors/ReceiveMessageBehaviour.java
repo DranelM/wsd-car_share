@@ -25,8 +25,8 @@ public class ReceiveMessageBehaviour extends CyclicBehaviour {
     }
 
     protected void parseMessage(ACLMessage msg) throws UnreadableException {
-        System.out.println("Agent " + myAgent.getAID().getName() +
-                " received " + msg.getContent() +
+        System.out.println(myAgent.getAID().getName() +
+                ": received " + msg.getContent() +
                 " from " + msg.getSender().getName());
     }
 

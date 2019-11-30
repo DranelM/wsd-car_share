@@ -15,8 +15,7 @@ public class DriverAgent extends Agent {
 
     @Override
     protected void setup() {
-        // Printout a welcome message
-        System.out.println("Cześć, tu kierowca: " + getAID().getName() + " się zalogował.");
+        System.out.println(getAID().getName() + ": Start");
 
         addBehaviour(new TickerBehaviour(this, 10000) {
             @Override

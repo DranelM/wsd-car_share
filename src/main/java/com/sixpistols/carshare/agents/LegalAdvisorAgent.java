@@ -18,7 +18,7 @@ import java.util.UUID;
 public class LegalAdvisorAgent extends Agent {
     @Override
     protected void setup() {
-        System.out.println("Cześć, tu LegalAdvisorAgent: " + getAID().getName() + " się zalogował.");
+        System.out.println(getAID().getName() + ": Start");
         registerServices();
 
         addBehaviour(new ReceiveMessages(this));

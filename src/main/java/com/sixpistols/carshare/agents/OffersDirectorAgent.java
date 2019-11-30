@@ -10,7 +10,7 @@ import jade.domain.FIPAException;
 public class OffersDirectorAgent extends Agent {
     @Override
     protected void setup() {
-        System.out.println("Cześć, tu offers-director: " + getAID().getName() + " się zalogował.");
+        System.out.println(getAID().getName() + ": Start");
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
