@@ -59,7 +59,7 @@ public class OffersDirectorAgent extends Agent {
     @Override
     protected void takeDown() {
         deregisterServices();
-        System.out.println(getAID().getName() + " : zawijam sie stad, narka");
+        System.out.println(getAID().getName() + ": Stop");
     }
 
     private void deregisterServices() {
@@ -80,8 +80,10 @@ public class OffersDirectorAgent extends Agent {
             Object content = msg.getContentObject();
 
             if (content instanceof TravelOffer) {
+                System.out.println(getAID().getName() + ": get message TravelOffer");
                 addBehaviour(new HandleTravelOffer(myAgent, msg));
             } else if (content instanceof TravelRequest) {
+                System.out.println(getAID().getName() + ": get message TravelRequest");
                 addBehaviour(new HandleTravelRequest(myAgent, msg));
             } else {
                 replyNotUnderstood(msg);
@@ -108,8 +110,11 @@ public class OffersDirectorAgent extends Agent {
 
             switch (request.getPerformative()) {
                 case ACLMessage.INFORM:
+                    System.out.println(getAID().getName() + ": TravelRequest INFORM");
                     travelOfferMap.put(travelOffer.id, travelOffer);
+                    break;
                 case ACLMessage.CANCEL:
+                    System.out.println(getAID().getName() + ": TravelRequest CANCEL");
                     travelOfferMap.remove(travelOffer.id);
             }
         }

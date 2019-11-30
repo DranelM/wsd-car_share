@@ -2,6 +2,7 @@ package com.sixpistols.carshare.agents;
 
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import com.sixpistols.carshare.messages.LoginToken;
+import com.sixpistols.carshare.messages.MessagesUtils;
 import com.sixpistols.carshare.messages.NewUserData;
 import com.sixpistols.carshare.messages.UserCredentials;
 import com.sixpistols.carshare.services.ServiceType;
@@ -13,8 +14,6 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
-
-import java.util.UUID;
 
 public class LegalAdvisorAgent extends Agent {
     @Override
@@ -56,7 +55,7 @@ public class LegalAdvisorAgent extends Agent {
     @Override
     protected void takeDown() {
         deregisterServices();
-        System.out.println(getAID().getName() + " : zawijam sie stad, narka");
+        System.out.println(getAID().getName() + ": Stop");
     }
 
     private void deregisterServices() {
@@ -130,12 +129,8 @@ public class LegalAdvisorAgent extends Agent {
 
         private LoginToken createLoginToken() {
             LoginToken loginToken = new LoginToken();
-            loginToken.id = generateRandomStringByUUIDNoDash();
+            loginToken.id = MessagesUtils.generateRandomStringByUUIDNoDash();
             return loginToken;
-        }
-
-        public String generateRandomStringByUUIDNoDash() {
-            return UUID.randomUUID().toString().replace("-", "");
         }
     }
 }

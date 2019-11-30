@@ -40,20 +40,21 @@ public abstract class UserAgent extends Agent {
                 return;
             }
             removeBehaviour(this);
-            login("login", "password");
+
+            UserCredentials userCredentials = new UserCredentials();
+            userCredentials.login = "login";
+            userCredentials.password = "password";
+            login(userCredentials);
         }
     }
 
-    private void login(final String login, final String password) {
+    private void login(final UserCredentials userCredentials) {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
                 System.out.println(getAID().getName() + ": Try to login");
                 ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
                 msg.addReceiver(accountVerifier);
-                UserCredentials userCredentials = new UserCredentials();
-                userCredentials.login = login;
-                userCredentials.password = password;
                 try {
                     msg.setContentObject(userCredentials);
                     send(msg);
