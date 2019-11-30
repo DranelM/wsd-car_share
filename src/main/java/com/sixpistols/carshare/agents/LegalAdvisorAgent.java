@@ -1,6 +1,7 @@
 package com.sixpistols.carshare.agents;
 
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
+import com.sixpistols.carshare.messages.CreateUser;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.DFService;
@@ -9,8 +10,6 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
-
-import java.io.Serializable;
 
 public class LegalAdvisorAgent extends Agent {
     @Override
@@ -71,24 +70,29 @@ public class LegalAdvisorAgent extends Agent {
         @Override
         protected void parseMessage(ACLMessage msg) throws UnreadableException {
             Object content = msg.getContentObject();
-            replyNotUnderstood(msg);
+
+            if (content instanceof CreateUser) {
+                addBehaviour(new HandleCreateUser(myAgent, msg));
+            } else {
+                replyNotUnderstood(msg);
+            }
         }
     }
 
-    private class CreateAccount extends OneShotBehaviour {
+    private class HandleCreateUser extends OneShotBehaviour {
         ACLMessage request;
 
-        public CreateAccount(Agent a, ACLMessage request) {
+        public HandleCreateUser(Agent a, ACLMessage request) {
             super(a);
             this.request = request;
         }
 
         public void action() {
             try {
-                Serializable op = (Serializable) request.getContentObject();
+                CreateUser createUser = (CreateUser) request.getContentObject();
                 ACLMessage reply = request.createReply();
-                reply.setPerformative(ACLMessage.INFORM);
-                reply.setContentObject(op);
+                reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+//                reply.setPerformative(ACLMessage.FAILURE);
                 send(reply);
             } catch (Exception ex) {
                 ex.printStackTrace();
