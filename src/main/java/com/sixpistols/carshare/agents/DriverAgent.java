@@ -53,6 +53,6 @@ public class DriverAgent extends Agent {
             }
         });
 
-        addBehaviour(new ReceiveMessageBehaviour(this, 2000));
+        addBehaviour(new ReceiveMessageBehaviour(this));
     }
 }

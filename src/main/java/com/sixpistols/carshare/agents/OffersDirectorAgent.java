@@ -23,7 +23,7 @@ public class OffersDirectorAgent extends Agent {
             fe.printStackTrace();
         }
 
-        addBehaviour(new ReceiveMessageBehaviour(this, 2000));
+        addBehaviour(new ReceiveMessageBehaviour(this));
     }
 
     @Override
