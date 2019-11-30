@@ -16,6 +16,8 @@ import jade.lang.acl.UnreadableException;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 public class OffersDirectorAgent extends Agent {
     HashMap<String, TravelOffer> travelOfferMap;
@@ -149,8 +151,10 @@ public class OffersDirectorAgent extends Agent {
     }
 
     private OffersList getOffersList(TravelRequest travelRequest) {
+        System.out.println(getAID().getName() + ": prepare OffersList");
         OffersList offersList = new OffersList();
-        offersList.travelOffers = travelOfferMap.values();
+        offersList.travelOffers = new LinkedList<>();
+        offersList.travelOffers.addAll(travelOfferMap.values());
         return offersList;
     }
 }

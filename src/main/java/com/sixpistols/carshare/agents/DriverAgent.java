@@ -16,8 +16,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class DriverAgent extends UserAgent {
-    AID[] currentOffersDirectors;
-
     @Override
     protected void afterLoginSucceeded() {
         addBehaviour(new WakerBehaviour(this, 1000) {
