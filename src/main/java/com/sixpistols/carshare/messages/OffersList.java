@@ -1,9 +1,14 @@
 package com.sixpistols.carshare.messages;
 
-import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 public class OffersList implements java.io.Serializable {
-    public Collection<TravelOffer> travelOffers;
+    public List<TravelOffer> travelOffers;
+
+    public OffersList() {
+        this.travelOffers = new LinkedList<>();
+    }
 
     @Override
     public String toString() {

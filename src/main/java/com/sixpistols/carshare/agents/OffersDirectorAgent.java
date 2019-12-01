@@ -153,7 +153,6 @@ public class OffersDirectorAgent extends Agent {
     private OffersList getOffersList(TravelRequest travelRequest) {
         System.out.println(getAID().getName() + ": prepare OffersList");
         OffersList offersList = new OffersList();
-        offersList.travelOffers = new LinkedList<>();
         offersList.travelOffers.addAll(travelOfferMap.values());
         return offersList;
     }

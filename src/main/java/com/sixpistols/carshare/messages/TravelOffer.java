@@ -1,13 +1,18 @@
 package com.sixpistols.carshare.messages;
 
-import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 public class TravelOffer implements java.io.Serializable {
     public String id;
-    public Collection<Coordinate> coordinateList;
+    public List<Coordinate> coordinateList;
     public int startTime;
     public int endTime;
     public int capacity;
+
+    public TravelOffer() {
+        this.coordinateList = new LinkedList<>();
+    }
 
     @Override
     public String toString() {

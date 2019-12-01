@@ -14,7 +14,7 @@ public class StartAgent extends Agent {
         agentContainer = getContainerController();
         createNewAgents(LegalAdvisorAgent.class, 1);
         createNewAgents(OffersDirectorAgent.class, 1);
-        createNewAgents(DriverAgent.class, 1);
+        createNewAgents(DriverAgent.class, 2);
         createNewAgents(PassengerAgent.class, 1);
     }
 

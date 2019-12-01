@@ -31,7 +31,6 @@ public class DriverAgent extends UserAgent {
     private TravelOffer createTestingTravelOffer() {
         TravelOffer travelOffer = new TravelOffer();
         travelOffer.id = MessagesUtils.generateRandomStringByUUIDNoDash();
-        travelOffer.coordinateList = new LinkedList<>();
         travelOffer.coordinateList.add(createTestingCoordinate());
         travelOffer.coordinateList.add(createTestingCoordinate());
         travelOffer.startTime = 1;
@@ -42,8 +41,8 @@ public class DriverAgent extends UserAgent {
 
     private Coordinate createTestingCoordinate() {
         Coordinate coordinate = new Coordinate();
-        coordinate.x = 1;
-        coordinate.y = 2;
+        coordinate.x = MessagesUtils.generateRandomInt(0, 5);
+        coordinate.y = MessagesUtils.generateRandomInt(0, 5);
         return coordinate;
     }
 
