@@ -1,9 +1,7 @@
 package com.sixpistols.carshare.agents;
 
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
-import com.sixpistols.carshare.messages.OffersList;
-import com.sixpistols.carshare.messages.TravelOffer;
-import com.sixpistols.carshare.messages.TravelRequest;
+import com.sixpistols.carshare.messages.*;
 import com.sixpistols.carshare.services.ServiceType;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
@@ -16,15 +14,13 @@ import jade.lang.acl.UnreadableException;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 
-public class OffersDirectorAgent extends Agent {
+public class OffersDirectorAgent extends LoggerAgent {
     HashMap<String, TravelOffer> travelOfferMap;
 
     @Override
     protected void setup() {
-        System.out.println(getAID().getName() + ": Start");
+        log.info("start");
         registerServices();
         travelOfferMap = new HashMap<>();
         addBehaviour(new ReceiveMessages(this));
@@ -61,7 +57,7 @@ public class OffersDirectorAgent extends Agent {
     @Override
     protected void takeDown() {
         deregisterServices();
-        System.out.println(getAID().getName() + ": Stop");
+        log.info("stop");
     }
 
     private void deregisterServices() {
@@ -82,11 +78,17 @@ public class OffersDirectorAgent extends Agent {
             Object content = msg.getContentObject();
 
             if (content instanceof TravelOffer) {
-                System.out.println(getAID().getName() + ": get message TravelOffer");
+                log.debug("get message TravelOffer");
                 addBehaviour(new HandleTravelOffer(myAgent, msg));
             } else if (content instanceof TravelRequest) {
-                System.out.println(getAID().getName() + ": get message TravelRequest");
+                log.debug("get message TravelRequest");
                 addBehaviour(new HandleTravelRequest(myAgent, msg));
+            } else if (content instanceof Decision) {
+                log.debug("get message Decision");
+            } else if (content instanceof CancelAgreement) {
+                log.debug("get message CancelAgreement");
+            } else if (content instanceof CancelOffer) {
+                log.debug("get message CancelOffer");
             } else {
                 replyNotUnderstood(msg);
             }
@@ -110,15 +112,7 @@ public class OffersDirectorAgent extends Agent {
                 return;
             }
 
-            switch (request.getPerformative()) {
-                case ACLMessage.INFORM:
-                    System.out.println(getAID().getName() + ": TravelRequest INFORM");
-                    travelOfferMap.put(travelOffer.id, travelOffer);
-                    break;
-                case ACLMessage.CANCEL:
-                    System.out.println(getAID().getName() + ": TravelRequest CANCEL");
-                    travelOfferMap.remove(travelOffer.id);
-            }
+            travelOfferMap.put(travelOffer.offerId, travelOffer);
         }
     }
 
@@ -139,6 +133,10 @@ public class OffersDirectorAgent extends Agent {
                 return;
             }
 
+            ACLMessage agree = request.createReply();
+            agree.setPerformative(ACLMessage.AGREE);
+            send(agree);
+
             ACLMessage reply = request.createReply();
             reply.setPerformative(ACLMessage.PROPOSE);
             try {
@@ -151,7 +149,7 @@ public class OffersDirectorAgent extends Agent {
     }
 
     private OffersList getOffersList(TravelRequest travelRequest) {
-        System.out.println(getAID().getName() + ": prepare OffersList");
+        log.debug("prepare OffersList");
         OffersList offersList = new OffersList();
         offersList.travelOffers.addAll(travelOfferMap.values());
         return offersList;

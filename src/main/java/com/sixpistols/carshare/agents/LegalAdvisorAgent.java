@@ -15,10 +15,10 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 
-public class LegalAdvisorAgent extends Agent {
+public class LegalAdvisorAgent extends LoggerAgent {
     @Override
     protected void setup() {
-        System.out.println(getAID().getName() + ": Start");
+        log.info("start");
         registerServices();
 
         addBehaviour(new ReceiveMessages(this));
@@ -55,7 +55,7 @@ public class LegalAdvisorAgent extends Agent {
     @Override
     protected void takeDown() {
         deregisterServices();
-        System.out.println(getAID().getName() + ": Stop");
+        log.info("stop");
     }
 
     private void deregisterServices() {
@@ -98,7 +98,6 @@ public class LegalAdvisorAgent extends Agent {
                 NewUserData newUserData = (NewUserData) request.getContentObject();
                 ACLMessage reply = request.createReply();
                 reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-//                reply.setPerformative(ACLMessage.FAILURE);
                 send(reply);
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -119,17 +118,17 @@ public class LegalAdvisorAgent extends Agent {
                 UserCredentials userCredentials = (UserCredentials) request.getContentObject();
                 ACLMessage reply = request.createReply();
                 reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-//                reply.setPerformative(ACLMessage.FAILURE);
-                reply.setContentObject(createLoginToken());
+                reply.setContentObject(createLoginToken(request));
                 send(reply);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
 
-        private LoginToken createLoginToken() {
+        private LoginToken createLoginToken(ACLMessage msg) {
             LoginToken loginToken = new LoginToken();
-            loginToken.id = MessagesUtils.generateRandomStringByUUIDNoDash();
+            loginToken.tokenId = MessagesUtils.generateRandomStringByUUIDNoDash();
+            loginToken.userId = msg.getSender().getName();
             return loginToken;
         }
     }

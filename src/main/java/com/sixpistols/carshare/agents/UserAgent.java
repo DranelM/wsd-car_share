@@ -1,6 +1,7 @@
 package com.sixpistols.carshare.agents;
 
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
+import com.sixpistols.carshare.messages.Error;
 import com.sixpistols.carshare.messages.LoginToken;
 import com.sixpistols.carshare.messages.UserCredentials;
 import com.sixpistols.carshare.services.ServiceType;
@@ -13,14 +14,15 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public abstract class UserAgent extends Agent {
+public abstract class UserAgent extends LoggerAgent {
     private AID accountVerifier;
     protected LoginToken loginToken;
 
     @Override
     protected void setup() {
-        System.out.println(getAID().getName() + ": Start");
+        log.info("start");
         addBehaviour(new FindAccountVerifierAgent(this, 1000));
     }
 
@@ -52,13 +54,13 @@ public abstract class UserAgent extends Agent {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                System.out.println(getAID().getName() + ": Try to login");
+                log.debug("Try to login");
                 ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
                 msg.addReceiver(accountVerifier);
                 try {
                     msg.setContentObject(userCredentials);
                     send(msg);
-                    addBehaviour(new HandleLoginRespond(myAgent));
+                    addBehaviour(new HandleLoginRespond(myAgent, msg.getConversationId()));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -67,20 +69,32 @@ public abstract class UserAgent extends Agent {
     }
 
     private class HandleLoginRespond extends ReceiveMessageBehaviour {
-        public HandleLoginRespond(Agent a) {
+        String conversationId;
+
+        public HandleLoginRespond(Agent a, String conversationId) {
             super(a);
+            this.conversationId = conversationId;
         }
 
         @Override
         protected void parseMessage(ACLMessage msg) throws UnreadableException {
             Object content = msg.getContentObject();
 
+            if (!Objects.equals(this.conversationId, msg.getConversationId())) {
+                log.error("conversationId not matched. {} != {}", this.conversationId, conversationId);
+                return;
+            }
+
             if (msg.getPerformative() == ACLMessage.ACCEPT_PROPOSAL) {
-                System.out.println(getAID().getName() + ": Login succeeded");
+                log.info("Login succeeded");
                 loginToken = (LoginToken) content;
                 afterLoginSucceeded();
-            } else if (msg.getPerformative() == ACLMessage.FAILURE) {
-                System.out.println(getAID().getName() + ": Login failed");
+            } else if (msg.getPerformative() == ACLMessage.REJECT_PROPOSAL) {
+                log.info("Login failed");
+                Error error = (Error) content;
+                afterLoginFailed(error);
+            } else {
+                log.error("Not understand message: {}", msg.toString());
             }
 
             removeBehaviour(this);
@@ -88,4 +102,6 @@ public abstract class UserAgent extends Agent {
     }
 
     protected abstract void afterLoginSucceeded();
+
+    protected abstract void afterLoginFailed(Error error);
 }

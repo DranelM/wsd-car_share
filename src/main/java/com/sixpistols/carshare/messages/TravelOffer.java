@@ -4,11 +4,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class TravelOffer implements java.io.Serializable {
-    public String id;
+    public String offerId;
+    public String driverId;
+    public String offerDirectorId;
     public List<Coordinate> coordinateList;
-    public int startTime;
-    public int endTime;
+    public long startTime;
+    public long endTime;
     public int capacity;
+    public double price;
 
     public TravelOffer() {
         this.coordinateList = new LinkedList<>();
@@ -17,11 +20,14 @@ public class TravelOffer implements java.io.Serializable {
     @Override
     public String toString() {
         return "TravelOffer{" +
-                "id='" + id + '\'' +
+                "offerId='" + offerId + '\'' +
+                ", driverId='" + driverId + '\'' +
+                ", offerDirectorId='" + offerDirectorId + '\'' +
                 ", coordinateList=" + coordinateList +
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +
                 ", capacity=" + capacity +
+                ", price=" + price +
                 '}';
     }
 }

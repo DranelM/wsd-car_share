@@ -1,6 +1,7 @@
 package com.sixpistols.carshare.agents;
 
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
+import com.sixpistols.carshare.messages.Error;
 import com.sixpistols.carshare.messages.*;
 import com.sixpistols.carshare.services.ServiceType;
 import com.sixpistols.carshare.services.ServiceUtils;
@@ -12,15 +13,16 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
 public class PassengerAgent extends UserAgent {
-    OffersListRespond offersListRespond;
+    List<OffersList> offersLists;
     int remainingOfferMatcherAgentsNumber;
 
     @Override
     protected void afterLoginSucceeded() {
-        offersListRespond = new OffersListRespond();
+        offersLists = new LinkedList<>();
         remainingOfferMatcherAgentsNumber = 0;
 
         addBehaviour(new WakerBehaviour(this, 2000) {
@@ -31,21 +33,26 @@ public class PassengerAgent extends UserAgent {
         });
     }
 
+    @Override
+    protected void afterLoginFailed(Error error) {
+        log.error("Login failed: {}", error);
+    }
+
     private TravelRequest createTestingTravelRequest() {
         TravelRequest travelRequest = new TravelRequest();
-        travelRequest.id = MessagesUtils.generateRandomStringByUUIDNoDash();
+        travelRequest.requestId = MessagesUtils.generateRandomStringByUUIDNoDash();
+        travelRequest.passengerId = getName();
         travelRequest.coordinateList.add(createTestingCoordinate());
         travelRequest.coordinateList.add(createTestingCoordinate());
         travelRequest.startTime = 1;
         travelRequest.endTime = 4;
-        travelRequest.capacity = 4;
         return travelRequest;
     }
 
     private Coordinate createTestingCoordinate() {
         Coordinate coordinate = new Coordinate();
-        coordinate.x = 1;
-        coordinate.y = 2;
+        coordinate.x = MessagesUtils.generateRandomInt(0, 5);
+        coordinate.y = MessagesUtils.generateRandomInt(0, 5);
         return coordinate;
     }
 
@@ -53,7 +60,7 @@ public class PassengerAgent extends UserAgent {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                System.out.println(getAID().getName() + ": post TravelRequest: " + travelRequest.id);
+                log.debug("post TravelRequest: {}", travelRequest.requestId);
                 List<AID> offerMatcherAgents = ServiceUtils.findAgentList(myAgent, ServiceType.OfferMatcher);
 
                 ACLMessage msg = new ACLMessage(ACLMessage.CFP);
@@ -79,10 +86,23 @@ public class PassengerAgent extends UserAgent {
 
         @Override
         protected void parseMessage(ACLMessage msg) throws UnreadableException {
+            if (msg.getPerformative() == ACLMessage.REFUSE) {
+                log.debug("TravelRequest: REFUSE");
+                removeBehaviour(this);
+                return;
+            } else if (msg.getPerformative() == ACLMessage.AGREE) {
+                log.debug("TravelRequest: AGREE");
+                return;
+            } else if (msg.getPerformative() == ACLMessage.FAILURE) {
+                log.debug("TravelRequest: FAILURE");
+                removeBehaviour(this);
+                return;
+            }
+
             Object content = msg.getContentObject();
             OffersList offersList = (OffersList) content;
-            System.out.println(getAID().getName() + ": OffersList: " + offersList.toString());
-            offersListRespond.addTravelOffer(offersList, msg);
+            log.debug("OffersList: {}", offersList.toString());
+            offersLists.add(offersList);
             remainingOfferMatcherAgentsNumber--;
 
             // get respond from all OfferMatcherAgents
@@ -92,59 +112,31 @@ public class PassengerAgent extends UserAgent {
                 addBehaviour(new WakerBehaviour(myAgent, 1000) {
                     @Override
                     protected void onWake() {
-                        int randomInt = MessagesUtils.generateRandomInt(0, offersListRespond.travelOffers.size() - 1);
-                        TravelOfferRespond travelOfferRespond = (TravelOfferRespond) offersListRespond.travelOffers.get(randomInt);
-                        acceptTravelOffer(createDecision(travelOfferRespond), travelOfferRespond.msg);
+                        int randomInt = MessagesUtils.generateRandomInt(0, offersLists.size() - 1);
+                        OffersList offersList = offersLists.get(randomInt);
+                        randomInt = MessagesUtils.generateRandomInt(0, offersList.travelOffers.size() - 1);
+                        TravelOffer travelOffer = offersList.travelOffers.get(randomInt);
+                        acceptTravelOffer(createDecision(travelOffer));
                     }
                 });
             }
         }
     }
 
-    private class TravelOfferRespond extends TravelOffer {
-        ACLMessage msg;
-
-        public TravelOfferRespond(TravelOffer travelOffer, ACLMessage msg) {
-            this.id = travelOffer.id;
-            this.coordinateList = travelOffer.coordinateList;
-            this.startTime = travelOffer.startTime;
-            this.endTime = travelOffer.endTime;
-            this.capacity = travelOffer.capacity;
-            this.msg = msg;
-        }
-    }
-
-    private class OffersListRespond extends OffersList {
-        public void addTravelOffer(OffersList offersList, ACLMessage msg) {
-            for (TravelOffer travelOffer : offersList.travelOffers) {
-                this.travelOffers.add(new TravelOfferRespond(travelOffer, msg));
-            }
-        }
-    }
-
     public Decision createDecision(final TravelOffer travelOffer) {
         Decision decision = new Decision();
-        decision.travelOfferId = travelOffer.id;
+        decision.travelOffer = travelOffer;
+        decision.passengerId = getName();
         decision.startCoordinate = travelOffer.coordinateList.get(0);
         decision.endCoordinate = travelOffer.coordinateList.get(travelOffer.coordinateList.size() - 1);
-        decision.space = 1;
         return decision;
     }
 
-    private void acceptTravelOffer(final Decision decision, final ACLMessage msg) {
+    private void acceptTravelOffer(final Decision decision) {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                System.out.println(getAID().getName() + ": accept TravelRequest: " + decision.travelOfferId);
-//                ACLMessage reply = msg.createReply();
-//                reply.setPerformative(ACLMessage.PROPOSE);
-//                try {
-//                    reply.setContentObject(decision);
-//                    send(reply);
-////                    addBehaviour(new HandleTravelRequestRespond(myAgent));
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
+                log.debug("accept travelOffer: {}", decision.travelOffer.offerId);
             }
         });
     }

@@ -5,7 +5,7 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 
-public class ReceiveMessageBehaviour extends CyclicBehaviour {
+public abstract class ReceiveMessageBehaviour extends CyclicBehaviour {
     public ReceiveMessageBehaviour(Agent a) {
         super(a);
     }
@@ -24,11 +24,7 @@ public class ReceiveMessageBehaviour extends CyclicBehaviour {
         }
     }
 
-    protected void parseMessage(ACLMessage msg) throws UnreadableException {
-        System.out.println(myAgent.getAID().getName() +
-                ": received " + msg.getContent() +
-                " from " + msg.getSender().getName());
-    }
+    protected abstract void parseMessage(ACLMessage msg) throws UnreadableException;
 
     protected void replyNotUnderstood(ACLMessage msg) {
         try {

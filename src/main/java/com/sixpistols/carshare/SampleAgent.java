@@ -3,6 +3,8 @@ package com.sixpistols.carshare;
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.UnreadableException;
 
 public class SampleAgent extends Agent {
     @Override
@@ -15,6 +17,11 @@ public class SampleAgent extends Agent {
             }
         });
 
-        addBehaviour(new ReceiveMessageBehaviour(this));
+        addBehaviour(new ReceiveMessageBehaviour(this) {
+            @Override
+            protected void parseMessage(ACLMessage msg) throws UnreadableException {
+                System.out.println("Get message " + msg);
+            }
+        });
     }
 }

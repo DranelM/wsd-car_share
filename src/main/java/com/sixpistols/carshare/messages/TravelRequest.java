@@ -1,14 +1,14 @@
 package com.sixpistols.carshare.messages;
 
-import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 
 public class TravelRequest implements java.io.Serializable {
-    public String id;
-    public Collection<Coordinate> coordinateList;
-    public int startTime;
-    public int endTime;
-    public int capacity;
+    public String requestId;
+    public String passengerId;
+    public List<Coordinate> coordinateList;
+    public long startTime;
+    public long endTime;
 
     public TravelRequest() {
         this.coordinateList = new LinkedList<>();
@@ -17,11 +17,11 @@ public class TravelRequest implements java.io.Serializable {
     @Override
     public String toString() {
         return "TravelRequest{" +
-                "id='" + id + '\'' +
+                "requestId='" + requestId + '\'' +
+                ", passengerId='" + passengerId + '\'' +
                 ", coordinateList=" + coordinateList +
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +
-                ", capacity=" + capacity +
                 '}';
     }
 }

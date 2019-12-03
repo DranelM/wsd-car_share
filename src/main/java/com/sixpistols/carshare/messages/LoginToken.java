@@ -1,12 +1,14 @@
 package com.sixpistols.carshare.messages;
 
 public class LoginToken implements java.io.Serializable {
-    public String id;
+    public String tokenId;
+    public String userId;
 
     @Override
     public String toString() {
         return "LoginToken{" +
-                "id='" + id + '\'' +
+                "tokenId='" + tokenId + '\'' +
+                ", userId='" + userId + '\'' +
                 '}';
     }
 }
