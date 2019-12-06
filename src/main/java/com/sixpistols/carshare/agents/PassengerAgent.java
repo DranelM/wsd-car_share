@@ -86,7 +86,7 @@ public class PassengerAgent extends UserAgent {
         @Override
         protected void afterInform(ACLMessage msg) throws UnreadableException {
             OffersList offersList = (OffersList) msg.getContentObject();
-            log.debug("OffersList: {}", offersList.toString());
+            log.debug("get offersList: {}", offersList.toString());
             offersLists.add(offersList);
         }
 
@@ -151,7 +151,7 @@ public class PassengerAgent extends UserAgent {
         protected void afterInform(ACLMessage msg) throws UnreadableException {
             Object content = msg.getContentObject();
             agreement = (Agreement) msg.getContentObject();
-            log.debug("agreement: {}", agreement.toString());
+            log.debug("get agreement: {}", agreement.toString());
         }
     }
 }

@@ -11,13 +11,12 @@ import java.util.Objects;
 public class HandleRequestMessageRespond extends ReceiveMessageBehaviour {
     protected final Logger log = LoggerFactory.getLogger(getClass().getSimpleName());
     private ACLMessage msgRequest;
-    private Integer expectedRequestResponds;
+    private int expectedRequestResponds;
     private int requestRespondsCounter;
 
     public HandleRequestMessageRespond(Agent agent, ACLMessage msgRequest) {
         this(agent, msgRequest, 1);
         this.msgRequest = msgRequest;
-        requestRespondsCounter = 0;
     }
 
     public HandleRequestMessageRespond(Agent agent, ACLMessage msgRequest, int expectedRequestResponds) {
@@ -53,19 +52,19 @@ public class HandleRequestMessageRespond extends ReceiveMessageBehaviour {
     private void parseMessagePerformative(ACLMessage msg) throws UnreadableException {
         switch (msg.getPerformative()) {
             case ACLMessage.REFUSE:
-                log.debug("request respond: REFUSE");
+                log.debug("get respond: REFUSE");
                 afterRefuse(msg);
                 break;
             case ACLMessage.AGREE:
-                log.debug("request respond: AGREE");
+                log.debug("get respond: AGREE");
                 afterAgree(msg);
                 break;
             case ACLMessage.FAILURE:
-                log.debug("request respond: FAILURE");
+                log.debug("get respond: FAILURE");
                 afterFailure(msg);
                 break;
             case ACLMessage.INFORM:
-                log.debug("request respond: INFORM");
+                log.debug("get respond: INFORM");
                 afterInform(msg);
                 break;
         }
@@ -95,7 +94,7 @@ public class HandleRequestMessageRespond extends ReceiveMessageBehaviour {
     }
 
     private boolean isReceivedExpectedRequestResponds() {
-        if (expectedRequestResponds != null && expectedRequestResponds == requestRespondsCounter) {
+        if (expectedRequestResponds == requestRespondsCounter) {
             log.debug("received expected request responds");
             return true;
         } else {

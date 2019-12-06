@@ -1,5 +1,6 @@
 package com.sixpistols.carshare.agents;
 
+import com.sixpistols.carshare.behaviors.BasicHandleRequestMessage;
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import com.sixpistols.carshare.messages.*;
 import com.sixpistols.carshare.services.ServiceType;
@@ -12,17 +13,19 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 
-import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashMap;
 
 public class OffersDirectorAgent extends LoggerAgent {
     HashMap<String, TravelOffer> travelOfferMap;
+    HashMap<String, Agreement> agreementMap;
 
     @Override
     protected void setup() {
         log.info("start");
         registerServices();
         travelOfferMap = new HashMap<>();
+        agreementMap = new HashMap<>();
         addBehaviour(new ReceiveMessages(this));
     }
 
@@ -85,6 +88,7 @@ public class OffersDirectorAgent extends LoggerAgent {
                 addBehaviour(new HandleTravelRequest(myAgent, msg));
             } else if (content instanceof Decision) {
                 log.debug("get message Decision");
+                addBehaviour(new HandleDecisionRequest(myAgent, msg));
             } else if (content instanceof CancelAgreement) {
                 log.debug("get message CancelAgreement");
             } else if (content instanceof CancelOffer) {
@@ -116,35 +120,15 @@ public class OffersDirectorAgent extends LoggerAgent {
         }
     }
 
-    private class HandleTravelRequest extends OneShotBehaviour {
-        ACLMessage request;
-
-        public HandleTravelRequest(Agent a, ACLMessage request) {
-            super(a);
-            this.request = request;
+    private class HandleTravelRequest extends BasicHandleRequestMessage {
+        public HandleTravelRequest(Agent agent, ACLMessage msgRequest) {
+            super(agent, msgRequest);
         }
 
-        public void action() {
-            TravelRequest travelRequest;
-            try {
-                travelRequest = (TravelRequest) request.getContentObject();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                return;
-            }
-
-            ACLMessage agree = request.createReply();
-            agree.setPerformative(ACLMessage.AGREE);
-            send(agree);
-
-            ACLMessage reply = request.createReply();
-            reply.setPerformative(ACLMessage.INFORM);
-            try {
-                reply.setContentObject(getOffersList(travelRequest));
-                send(reply);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        @Override
+        protected Serializable getContentObject() throws UnreadableException {
+            TravelRequest travelRequest = (TravelRequest) getMsgRequest().getContentObject();
+            return getOffersList(travelRequest);
         }
     }
 
@@ -153,5 +137,25 @@ public class OffersDirectorAgent extends LoggerAgent {
         OffersList offersList = new OffersList();
         offersList.travelOffers.addAll(travelOfferMap.values());
         return offersList;
+    }
+
+    private class HandleDecisionRequest extends BasicHandleRequestMessage {
+        public HandleDecisionRequest(Agent agent, ACLMessage msgRequest) {
+            super(agent, msgRequest);
+        }
+
+        @Override
+        protected Serializable getContentObject() throws UnreadableException {
+            Decision decision = (Decision) getMsgRequest().getContentObject();
+            return createAgreement(decision);
+        }
+    }
+
+    private Serializable createAgreement(Decision decision) {
+        Agreement agreement = new Agreement();
+        agreement.agreementId = MessagesUtils.generateRandomStringByUUIDNoDash();
+        agreement.decision = decision;
+        agreementMap.put(agreement.agreementId, agreement);
+        return agreement;
     }
 }
