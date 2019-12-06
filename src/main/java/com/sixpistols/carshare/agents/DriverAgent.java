@@ -1,21 +1,32 @@
 package com.sixpistols.carshare.agents;
 
-import com.sixpistols.carshare.messages.Coordinate;
+import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import com.sixpistols.carshare.messages.Error;
-import com.sixpistols.carshare.messages.MessagesUtils;
-import com.sixpistols.carshare.messages.TravelOffer;
+import com.sixpistols.carshare.messages.*;
 import com.sixpistols.carshare.services.ServiceType;
 import com.sixpistols.carshare.services.ServiceUtils;
 import jade.core.AID;
+import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.WakerBehaviour;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.UnreadableException;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 public class DriverAgent extends UserAgent {
+    HashMap<String, Agreement> agreementMap;
+
+    @Override
+    protected void setup() {
+        super.setup();
+        agreementMap = new HashMap<>();
+    }
+
     @Override
     protected void afterLoginSucceeded() {
+        addBehaviour(new ReceiveMessages(this));
         addBehaviour(new WakerBehaviour(this, 1000) {
             @Override
             protected void onWake() {
@@ -67,5 +78,48 @@ public class DriverAgent extends UserAgent {
                 }
             }
         });
+    }
+
+    private class ReceiveMessages extends ReceiveMessageBehaviour {
+        public ReceiveMessages(Agent a) {
+            super(a);
+        }
+
+        @Override
+        protected void parseMessage(ACLMessage msg) throws UnreadableException {
+            Object content = msg.getContentObject();
+
+            if (content instanceof Agreement) {
+                log.debug("get message Agreement");
+                addBehaviour(new HandleAgreement(myAgent, msg));
+            } else if (content instanceof CancelAgreementReport) {
+                log.debug("get message CancelAgreementReport");
+            } else if (content instanceof PaymentReport) {
+                log.debug("get message PaymentReport");
+            } else {
+                replyNotUnderstood(msg);
+            }
+        }
+    }
+
+    private class HandleAgreement extends OneShotBehaviour {
+        ACLMessage request;
+
+        public HandleAgreement(Agent a, ACLMessage request) {
+            super(a);
+            this.request = request;
+        }
+
+        public void action() {
+            Agreement agreement;
+            try {
+                agreement = (Agreement) request.getContentObject();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                return;
+            }
+
+            agreementMap.put(agreement.agreementId, agreement);
+        }
     }
 }

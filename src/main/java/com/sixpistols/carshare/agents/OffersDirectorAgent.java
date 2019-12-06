@@ -166,7 +166,7 @@ public class OffersDirectorAgent extends LoggerAgent {
             msg.addReceiver(driverAgent);
             try {
                 msg.setContentObject(agreement);
-//                send(msg);
+                send(msg);
             } catch (IOException e) {
                 e.printStackTrace();
             }
