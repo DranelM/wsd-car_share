@@ -15,6 +15,7 @@ import jade.lang.acl.UnreadableException;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 public class PassengerAgent extends UserAgent {
     List<OffersList> offersLists;
@@ -62,16 +63,17 @@ public class PassengerAgent extends UserAgent {
             public void action() {
                 log.debug("post TravelRequest: {}", travelRequest.requestId);
                 List<AID> offerMatcherAgents = ServiceUtils.findAgentList(myAgent, ServiceType.OfferMatcher);
-
-                ACLMessage msg = new ACLMessage(ACLMessage.CFP);
                 remainingOfferMatcherAgentsNumber = offerMatcherAgents.size();
+
+                ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+                msg.setConversationId(MessagesUtils.generateRandomStringByUUIDNoDash());
                 for (AID agent : offerMatcherAgents) {
                     msg.addReceiver(agent);
                 }
                 try {
                     msg.setContentObject(travelRequest);
                     send(msg);
-                    addBehaviour(new HandleTravelRequestRespond(myAgent));
+                    addBehaviour(new HandleTravelRequestRespond(myAgent, msg));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -80,14 +82,23 @@ public class PassengerAgent extends UserAgent {
     }
 
     private class HandleTravelRequestRespond extends ReceiveMessageBehaviour {
-        public HandleTravelRequestRespond(Agent a) {
+        ACLMessage msgRequest;
+
+        public HandleTravelRequestRespond(Agent a, ACLMessage msgRequest) {
             super(a);
+            this.msgRequest = msgRequest;
         }
 
         @Override
         protected void parseMessage(ACLMessage msg) throws UnreadableException {
+            if (!Objects.equals(msgRequest.getConversationId(), msg.getConversationId())) {
+                log.debug("conversationId not matched. {} != {}", msgRequest.getConversationId(), msg.getConversationId());
+                return;
+            }
+
             if (msg.getPerformative() == ACLMessage.REFUSE) {
                 log.debug("TravelRequest: REFUSE");
+                remainingOfferMatcherAgentsNumber--;
                 removeBehaviour(this);
                 return;
             } else if (msg.getPerformative() == ACLMessage.AGREE) {
@@ -95,6 +106,7 @@ public class PassengerAgent extends UserAgent {
                 return;
             } else if (msg.getPerformative() == ACLMessage.FAILURE) {
                 log.debug("TravelRequest: FAILURE");
+                remainingOfferMatcherAgentsNumber--;
                 removeBehaviour(this);
                 return;
             }
@@ -108,18 +120,22 @@ public class PassengerAgent extends UserAgent {
             // get respond from all OfferMatcherAgents
             if (remainingOfferMatcherAgentsNumber <= 0) {
                 removeBehaviour(this);
-                // after 1s select random offersList
-                addBehaviour(new WakerBehaviour(myAgent, 1000) {
-                    @Override
-                    protected void onWake() {
-                        int randomInt = MessagesUtils.generateRandomInt(0, offersLists.size() - 1);
-                        OffersList offersList = offersLists.get(randomInt);
-                        randomInt = MessagesUtils.generateRandomInt(0, offersList.travelOffers.size() - 1);
-                        TravelOffer travelOffer = offersList.travelOffers.get(randomInt);
-                        acceptTravelOffer(createDecision(travelOffer));
-                    }
-                });
+                selectRandomTravelOffer();
             }
+        }
+
+        private void selectRandomTravelOffer() {
+            // after 1s select random offersList
+            addBehaviour(new WakerBehaviour(myAgent, 1000) {
+                @Override
+                protected void onWake() {
+                    int randomInt = MessagesUtils.generateRandomInt(0, offersLists.size() - 1);
+                    OffersList offersList = offersLists.get(randomInt);
+                    randomInt = MessagesUtils.generateRandomInt(0, offersList.travelOffers.size() - 1);
+                    TravelOffer travelOffer = offersList.travelOffers.get(randomInt);
+                    acceptTravelOffer(createDecision(travelOffer));
+                }
+            });
         }
     }
 

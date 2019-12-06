@@ -80,8 +80,8 @@ public abstract class UserAgent extends LoggerAgent {
         protected void parseMessage(ACLMessage msg) throws UnreadableException {
             Object content = msg.getContentObject();
 
-            if (!Objects.equals(this.conversationId, msg.getConversationId())) {
-                log.error("conversationId not matched. {} != {}", this.conversationId, conversationId);
+            if (!Objects.equals(conversationId, msg.getConversationId())) {
+                log.error("conversationId not matched. {} != {}", this.conversationId, msg.getConversationId());
                 return;
             }
 
