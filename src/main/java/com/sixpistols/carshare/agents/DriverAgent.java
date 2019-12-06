@@ -14,9 +14,11 @@ import jade.lang.acl.UnreadableException;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 
 public class DriverAgent extends UserAgent {
     HashMap<String, Agreement> agreementMap;
+    List<PaymentReport> paymentReports;
 
     @Override
     protected void setup() {
@@ -97,6 +99,7 @@ public class DriverAgent extends UserAgent {
                 addBehaviour(new HandleCancelAgreementReport(myAgent, msg));
             } else if (content instanceof PaymentReport) {
                 log.debug("get message PaymentReport");
+                addBehaviour(new HandlePaymentReport(myAgent, msg));
             } else {
                 replyNotUnderstood(msg);
             }
@@ -146,6 +149,29 @@ public class DriverAgent extends UserAgent {
             String agreementId = cancelAgreementReport.cancelAgreement.agreement.agreementId;
             agreementMap.remove(agreementId);
             log.info("cancel agreement {}", agreementId);
+        }
+    }
+
+    private class HandlePaymentReport extends OneShotBehaviour {
+        ACLMessage request;
+
+        public HandlePaymentReport(Agent a, ACLMessage request) {
+            super(a);
+            this.request = request;
+        }
+
+        public void action() {
+            PaymentReport paymentReport;
+            try {
+                paymentReport = (PaymentReport) request.getContentObject();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                return;
+            }
+
+            String paymentId = paymentReport.payment.paymentId;
+            log.info("get paymentReport {}", paymentId);
+            paymentReports.add(paymentReport);
         }
     }
 }
