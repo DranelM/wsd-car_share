@@ -64,7 +64,7 @@ public class DriverAgent extends UserAgent {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                log.debug("post TravelOffer: {}", travelOffer.offerId);
+                log.info("post TravelOffer: {}", travelOffer.offerId);
                 AID offerDirectorAgent = ServiceUtils.findAgent(myAgent, ServiceType.OfferDirector);
 
                 ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
@@ -94,6 +94,7 @@ public class DriverAgent extends UserAgent {
                 addBehaviour(new HandleAgreement(myAgent, msg));
             } else if (content instanceof CancelAgreementReport) {
                 log.debug("get message CancelAgreementReport");
+                addBehaviour(new HandleCancelAgreementReport(myAgent, msg));
             } else if (content instanceof PaymentReport) {
                 log.debug("get message PaymentReport");
             } else {
@@ -119,7 +120,32 @@ public class DriverAgent extends UserAgent {
                 return;
             }
 
-            agreementMap.put(agreement.agreementId, agreement);
+            String agreementId = agreement.agreementId;
+            agreementMap.put(agreementId, agreement);
+            log.info("get agreement {}", agreementId);
+        }
+    }
+
+    private class HandleCancelAgreementReport extends OneShotBehaviour {
+        ACLMessage request;
+
+        public HandleCancelAgreementReport(Agent a, ACLMessage request) {
+            super(a);
+            this.request = request;
+        }
+
+        public void action() {
+            CancelAgreementReport cancelAgreementReport;
+            try {
+                cancelAgreementReport = (CancelAgreementReport) request.getContentObject();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                return;
+            }
+
+            String agreementId = cancelAgreementReport.cancelAgreement.agreement.agreementId;
+            agreementMap.remove(agreementId);
+            log.info("cancel agreement {}", agreementId);
         }
     }
 }
