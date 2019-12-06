@@ -14,7 +14,6 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 
@@ -93,6 +92,7 @@ public class OffersDirectorAgent extends LoggerAgent {
                 addBehaviour(new HandleDecisionRequest(myAgent, msg));
             } else if (content instanceof CancelAgreement) {
                 log.debug("get message CancelAgreement");
+                addBehaviour(new HandleCancelAgreementRequest(myAgent, msg));
             } else if (content instanceof CancelOffer) {
                 log.debug("get message CancelOffer");
             } else {
@@ -123,14 +123,21 @@ public class OffersDirectorAgent extends LoggerAgent {
     }
 
     private class HandleTravelRequest extends BasicHandleRequestMessage {
+        OffersList offersList;
+
         public HandleTravelRequest(Agent agent, ACLMessage msgRequest) {
             super(agent, msgRequest);
         }
 
         @Override
-        protected Serializable getContentObject() throws UnreadableException {
+        protected void beforeInform() throws UnreadableException {
             TravelRequest travelRequest = (TravelRequest) getMsgRequest().getContentObject();
-            return getOffersList(travelRequest);
+            offersList = getOffersList(travelRequest);
+        }
+
+        @Override
+        protected Serializable getContentObject() {
+            return offersList;
         }
     }
 
@@ -149,27 +156,18 @@ public class OffersDirectorAgent extends LoggerAgent {
         }
 
         @Override
-        protected Serializable getContentObject() throws UnreadableException {
+        protected void beforeInform() throws UnreadableException {
             Decision decision = (Decision) getMsgRequest().getContentObject();
             agreement = createAgreement(decision);
-            return agreement;
+
+            String driverName = decision.travelOffer.driverId;
+            AID driverAgent = new AID(driverName, AID.ISGUID);
+            addNotifyAgent(driverAgent);
         }
 
         @Override
-        protected void afterSendInform() {
-            String driverName = agreement.decision.travelOffer.driverId;
-            log.debug("send INFORM to driver: {}", driverName);
-            AID driverAgent = new AID(driverName, AID.ISGUID);
-
-            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-            msg.setConversationId(MessagesUtils.generateRandomStringByUUIDNoDash());
-            msg.addReceiver(driverAgent);
-            try {
-                msg.setContentObject(agreement);
-                send(msg);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        protected Serializable getContentObject() {
+            return agreement;
         }
     }
 
@@ -179,5 +177,34 @@ public class OffersDirectorAgent extends LoggerAgent {
         agreement.decision = decision;
         agreementMap.put(agreement.agreementId, agreement);
         return agreement;
+    }
+
+    private class HandleCancelAgreementRequest extends BasicHandleRequestMessage {
+        CancelAgreementReport cancelAgreementReport;
+
+        public HandleCancelAgreementRequest(Agent agent, ACLMessage msgRequest) {
+            super(agent, msgRequest);
+        }
+
+        @Override
+        protected void beforeInform() throws UnreadableException {
+            CancelAgreement cancelAgreement = (CancelAgreement) getMsgRequest().getContentObject();
+            cancelAgreementReport = createCancelAgreementReport(cancelAgreement);
+
+            String driverName = cancelAgreementReport.cancelAgreement.agreement.decision.travelOffer.driverId;
+            AID driverAgent = new AID(driverName, AID.ISGUID);
+            addNotifyAgent(driverAgent);
+        }
+
+        @Override
+        protected Serializable getContentObject() {
+            return cancelAgreementReport;
+        }
+    }
+
+    private CancelAgreementReport createCancelAgreementReport(CancelAgreement cancelAgreement) {
+        CancelAgreementReport cancelAgreementReport = new CancelAgreementReport();
+        cancelAgreementReport.cancelAgreement = cancelAgreement;
+        return cancelAgreementReport;
     }
 }

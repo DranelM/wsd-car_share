@@ -148,7 +148,7 @@ public class DriverAgent extends UserAgent {
 
             String agreementId = cancelAgreementReport.cancelAgreement.agreement.agreementId;
             agreementMap.remove(agreementId);
-            log.info("cancel agreement {}", agreementId);
+            log.info("cancel agreement {} by passenger", agreementId);
         }
     }
 

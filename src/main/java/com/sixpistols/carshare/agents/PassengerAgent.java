@@ -191,7 +191,7 @@ public class PassengerAgent extends UserAgent {
         @Override
         protected void afterInform(ACLMessage msg) throws UnreadableException {
             CancelAgreementReport cancelAgreementReport = (CancelAgreementReport) msg.getContentObject();
-            log.debug("get cancelAgreementReport: {}", cancelAgreementReport.cancelAgreement.agreement.toString());
+            log.debug("get cancelAgreementReport: {}", cancelAgreementReport.cancelAgreement.agreement.agreementId);
             agreement = null;
         }
     }
