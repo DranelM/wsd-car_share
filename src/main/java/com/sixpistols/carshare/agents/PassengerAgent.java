@@ -1,6 +1,6 @@
 package com.sixpistols.carshare.agents;
 
-import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
+import com.sixpistols.carshare.behaviors.HandleRequestMessageRespond;
 import com.sixpistols.carshare.messages.Error;
 import com.sixpistols.carshare.messages.*;
 import com.sixpistols.carshare.services.ServiceType;
@@ -15,16 +15,14 @@ import jade.lang.acl.UnreadableException;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 
 public class PassengerAgent extends UserAgent {
     List<OffersList> offersLists;
-    int remainingOfferMatcherAgentsNumber;
+    Agreement agreement;
 
     @Override
     protected void afterLoginSucceeded() {
         offersLists = new LinkedList<>();
-        remainingOfferMatcherAgentsNumber = 0;
 
         addBehaviour(new WakerBehaviour(this, 2000) {
             @Override
@@ -62,8 +60,7 @@ public class PassengerAgent extends UserAgent {
             @Override
             public void action() {
                 log.debug("post TravelRequest: {}", travelRequest.requestId);
-                List<AID> offerMatcherAgents = ServiceUtils.findAgentList(myAgent, ServiceType.OfferMatcher);
-                remainingOfferMatcherAgentsNumber = offerMatcherAgents.size();
+                List<AID> offerMatcherAgents = ServiceUtils.findAgentList(myAgent, ServiceType.OfferDirector);
 
                 ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
                 msg.setConversationId(MessagesUtils.generateRandomStringByUUIDNoDash());
@@ -73,7 +70,7 @@ public class PassengerAgent extends UserAgent {
                 try {
                     msg.setContentObject(travelRequest);
                     send(msg);
-                    addBehaviour(new HandleTravelRequestRespond(myAgent, msg));
+                    addBehaviour(new HandleTravelRequestRespond(myAgent, msg, offerMatcherAgents.size()));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -81,47 +78,22 @@ public class PassengerAgent extends UserAgent {
         });
     }
 
-    private class HandleTravelRequestRespond extends ReceiveMessageBehaviour {
-        ACLMessage msgRequest;
-
-        public HandleTravelRequestRespond(Agent a, ACLMessage msgRequest) {
-            super(a);
-            this.msgRequest = msgRequest;
+    private class HandleTravelRequestRespond extends HandleRequestMessageRespond {
+        public HandleTravelRequestRespond(Agent agent, ACLMessage msgRequest, int expectedRequestResponds) {
+            super(agent, msgRequest, expectedRequestResponds);
         }
 
         @Override
-        protected void parseMessage(ACLMessage msg) throws UnreadableException {
-            if (!Objects.equals(msgRequest.getConversationId(), msg.getConversationId())) {
-                log.debug("conversationId not matched. {} != {}", msgRequest.getConversationId(), msg.getConversationId());
-                return;
-            }
-
-            if (msg.getPerformative() == ACLMessage.REFUSE) {
-                log.debug("TravelRequest: REFUSE");
-                remainingOfferMatcherAgentsNumber--;
-                removeBehaviour(this);
-                return;
-            } else if (msg.getPerformative() == ACLMessage.AGREE) {
-                log.debug("TravelRequest: AGREE");
-                return;
-            } else if (msg.getPerformative() == ACLMessage.FAILURE) {
-                log.debug("TravelRequest: FAILURE");
-                remainingOfferMatcherAgentsNumber--;
-                removeBehaviour(this);
-                return;
-            }
-
-            Object content = msg.getContentObject();
-            OffersList offersList = (OffersList) content;
+        protected void afterInform(ACLMessage msg) throws UnreadableException {
+            OffersList offersList = (OffersList) msg.getContentObject();
             log.debug("OffersList: {}", offersList.toString());
             offersLists.add(offersList);
-            remainingOfferMatcherAgentsNumber--;
+        }
 
-            // get respond from all OfferMatcherAgents
-            if (remainingOfferMatcherAgentsNumber <= 0) {
-                removeBehaviour(this);
-                selectRandomTravelOffer();
-            }
+        @Override
+        protected void afterReceivingExpectedRequestResponds(ACLMessage msg) {
+            super.afterReceivingExpectedRequestResponds(msg);
+            selectRandomTravelOffer();
         }
 
         private void selectRandomTravelOffer() {
@@ -153,7 +125,33 @@ public class PassengerAgent extends UserAgent {
             @Override
             public void action() {
                 log.debug("accept travelOffer: {}", decision.travelOffer.offerId);
+                String name = decision.travelOffer.offerDirectorId;
+                AID offerDirectorAgent = new AID(name, AID.ISGUID);
+
+                ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+                msg.setConversationId(MessagesUtils.generateRandomStringByUUIDNoDash());
+                msg.addReceiver(offerDirectorAgent);
+                try {
+                    msg.setContentObject(decision);
+                    send(msg);
+                    addBehaviour(new HandleAcceptTravelOfferRespond(myAgent, msg));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
+    }
+
+    private class HandleAcceptTravelOfferRespond extends HandleRequestMessageRespond {
+        public HandleAcceptTravelOfferRespond(Agent agent, ACLMessage msgRequest) {
+            super(agent, msgRequest);
+        }
+
+        @Override
+        protected void afterInform(ACLMessage msg) throws UnreadableException {
+            Object content = msg.getContentObject();
+            agreement = (Agreement) msg.getContentObject();
+            log.debug("agreement: {}", agreement.toString());
+        }
     }
 }

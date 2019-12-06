@@ -2,7 +2,7 @@ package com.sixpistols.carshare.services;
 
 public enum ServiceType {
     AccountVerifier("account-verifier"),
-    OfferMatcher("offer-matcher"),
+    OfferDirector("offer-director"),
     AgreementManager("agreement-manager"),
     PaymentExecutor("payment-executor");
 

@@ -1,6 +1,5 @@
 package com.sixpistols.carshare.agents;
 
-import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import com.sixpistols.carshare.messages.Coordinate;
 import com.sixpistols.carshare.messages.Error;
 import com.sixpistols.carshare.messages.MessagesUtils;
@@ -13,7 +12,6 @@ import jade.core.behaviours.WakerBehaviour;
 import jade.lang.acl.ACLMessage;
 
 import java.io.IOException;
-import java.util.List;
 
 public class DriverAgent extends UserAgent {
     @Override
@@ -56,12 +54,11 @@ public class DriverAgent extends UserAgent {
             @Override
             public void action() {
                 log.debug("post TravelOffer: {}", travelOffer.offerId);
-                List<AID> offerMatcherAgents = ServiceUtils.findAgentList(myAgent, ServiceType.OfferMatcher);
+                AID offerDirectorAgent = ServiceUtils.findAgent(myAgent, ServiceType.OfferDirector);
 
                 ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-                for (AID agent : offerMatcherAgents) {
-                    msg.addReceiver(agent);
-                }
+                msg.addReceiver(offerDirectorAgent);
+                travelOffer.offerDirectorId = offerDirectorAgent.getName();
                 try {
                     msg.setContentObject(travelOffer);
                     send(msg);

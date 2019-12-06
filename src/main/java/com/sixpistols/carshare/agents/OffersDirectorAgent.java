@@ -40,7 +40,7 @@ public class OffersDirectorAgent extends LoggerAgent {
 
     private ServiceDescription getServiceOfferMatcher() {
         ServiceDescription sd = new ServiceDescription();
-        String type = ServiceType.OfferMatcher.getType();
+        String type = ServiceType.OfferDirector.getType();
         sd.setType(type);
         sd.setName("Warsaw-" + type);
         return sd;
@@ -138,7 +138,7 @@ public class OffersDirectorAgent extends LoggerAgent {
             send(agree);
 
             ACLMessage reply = request.createReply();
-            reply.setPerformative(ACLMessage.PROPOSE);
+            reply.setPerformative(ACLMessage.INFORM);
             try {
                 reply.setContentObject(getOffersList(travelRequest));
                 send(reply);
