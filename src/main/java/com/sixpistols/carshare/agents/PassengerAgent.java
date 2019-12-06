@@ -151,6 +151,48 @@ public class PassengerAgent extends UserAgent {
         protected void afterInform(ACLMessage msg) throws UnreadableException {
             agreement = (Agreement) msg.getContentObject();
             log.debug("get agreement: {}", agreement.toString());
+            cancelAgreement(createCancelAgreement(agreement));
+        }
+    }
+
+    public CancelAgreement createCancelAgreement(final Agreement agreement) {
+        CancelAgreement cancelAgreement = new CancelAgreement();
+        cancelAgreement.agreement = agreement;
+        return cancelAgreement;
+    }
+
+    private void cancelAgreement(final CancelAgreement cancelAgreement) {
+        addBehaviour(new OneShotBehaviour() {
+            @Override
+            public void action() {
+                log.debug("cancel agreement: {}", cancelAgreement.agreement.agreementId);
+                String offerDirectorName = cancelAgreement.agreement.decision.travelOffer.offerDirectorId;
+                AID offerDirectorAgent = new AID(offerDirectorName, AID.ISGUID);
+
+                ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+                msg.setConversationId(MessagesUtils.generateRandomStringByUUIDNoDash());
+                msg.addReceiver(offerDirectorAgent);
+                try {
+                    msg.setContentObject(cancelAgreement);
+                    send(msg);
+                    addBehaviour(new HandleCancelAgreementRespond(myAgent, msg));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private class HandleCancelAgreementRespond extends HandleRequestMessageRespond {
+        public HandleCancelAgreementRespond(Agent agent, ACLMessage msgRequest) {
+            super(agent, msgRequest);
+        }
+
+        @Override
+        protected void afterInform(ACLMessage msg) throws UnreadableException {
+            CancelAgreementReport cancelAgreementReport = (CancelAgreementReport) msg.getContentObject();
+            log.debug("get cancelAgreementReport: {}", cancelAgreementReport.cancelAgreement.agreement.toString());
+            agreement = null;
         }
     }
 }
