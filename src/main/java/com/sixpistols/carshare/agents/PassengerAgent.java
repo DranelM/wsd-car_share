@@ -149,7 +149,6 @@ public class PassengerAgent extends UserAgent {
 
         @Override
         protected void afterInform(ACLMessage msg) throws UnreadableException {
-            Object content = msg.getContentObject();
             agreement = (Agreement) msg.getContentObject();
             log.debug("get agreement: {}", agreement.toString());
         }

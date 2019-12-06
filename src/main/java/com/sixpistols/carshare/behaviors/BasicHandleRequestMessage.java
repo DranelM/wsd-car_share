@@ -15,7 +15,9 @@ public abstract class BasicHandleRequestMessage extends HandleRequestMessage {
     @Override
     public void action() {
         sendAgree();
-        sendInform();
+        if (sendInform()) {
+            afterSendInform();
+        }
     }
 
     private void sendAgree() {
@@ -25,17 +27,22 @@ public abstract class BasicHandleRequestMessage extends HandleRequestMessage {
         myAgent.send(agree);
     }
 
-    private void sendInform() {
+    private Boolean sendInform() {
         log.debug("send respond: INFORM");
         ACLMessage reply = getMsgRequest().createReply();
         reply.setPerformative(ACLMessage.INFORM);
         try {
             reply.setContentObject(getContentObject());
-            myAgent.send(reply);
         } catch (UnreadableException | IOException e) {
             e.printStackTrace();
+            return false;
         }
+        myAgent.send(reply);
+        return true;
     }
 
     protected abstract Serializable getContentObject() throws UnreadableException;
+
+    protected void afterSendInform() {
+    }
 }

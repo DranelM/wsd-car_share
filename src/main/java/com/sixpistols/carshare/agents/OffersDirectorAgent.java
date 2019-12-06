@@ -4,6 +4,7 @@ import com.sixpistols.carshare.behaviors.BasicHandleRequestMessage;
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import com.sixpistols.carshare.messages.*;
 import com.sixpistols.carshare.services.ServiceType;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.DFService;
@@ -13,6 +14,7 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 
@@ -140,6 +142,8 @@ public class OffersDirectorAgent extends LoggerAgent {
     }
 
     private class HandleDecisionRequest extends BasicHandleRequestMessage {
+        Agreement agreement;
+
         public HandleDecisionRequest(Agent agent, ACLMessage msgRequest) {
             super(agent, msgRequest);
         }
@@ -147,11 +151,29 @@ public class OffersDirectorAgent extends LoggerAgent {
         @Override
         protected Serializable getContentObject() throws UnreadableException {
             Decision decision = (Decision) getMsgRequest().getContentObject();
-            return createAgreement(decision);
+            agreement = createAgreement(decision);
+            return agreement;
+        }
+
+        @Override
+        protected void afterSendInform() {
+            String driverName = agreement.decision.travelOffer.driverId;
+            log.debug("send INFORM to driver: {}", driverName);
+            AID driverAgent = new AID(driverName, AID.ISGUID);
+
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+            msg.setConversationId(MessagesUtils.generateRandomStringByUUIDNoDash());
+            msg.addReceiver(driverAgent);
+            try {
+                msg.setContentObject(agreement);
+//                send(msg);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private Serializable createAgreement(Decision decision) {
+    private Agreement createAgreement(Decision decision) {
         Agreement agreement = new Agreement();
         agreement.agreementId = MessagesUtils.generateRandomStringByUUIDNoDash();
         agreement.decision = decision;
