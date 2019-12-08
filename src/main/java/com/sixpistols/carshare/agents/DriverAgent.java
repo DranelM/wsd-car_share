@@ -167,8 +167,7 @@ public class DriverAgent extends UserAgent {
                 String offerDirectorName = cancelOffer.getOfferDirectorId();
                 AID offerDirectorAgent = new AID(offerDirectorName, AID.ISGUID);
 
-                ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-                msg.setConversationId(MessagesUtils.generateRandomStringByUUIDNoDash());
+                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.REQUEST);
                 msg.addReceiver(offerDirectorAgent);
                 try {
                     msg.setContentObject(cancelOffer);

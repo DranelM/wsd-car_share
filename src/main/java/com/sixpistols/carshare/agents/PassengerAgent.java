@@ -63,8 +63,7 @@ public class PassengerAgent extends UserAgent {
                 log.debug("post TravelRequest: {}", travelRequest.getRequestId());
                 List<AID> offerMatcherAgents = ServiceUtils.findAgentList(myAgent, ServiceType.OfferDirector);
 
-                ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-                msg.setConversationId(MessagesUtils.generateRandomStringByUUIDNoDash());
+                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.REQUEST);
                 offerMatcherAgents.forEach(msg::addReceiver);
                 try {
                     msg.setContentObject(travelRequest);
@@ -128,8 +127,7 @@ public class PassengerAgent extends UserAgent {
                 String name = decision.getOfferDirectorId();
                 AID offerDirectorAgent = new AID(name, AID.ISGUID);
 
-                ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-                msg.setConversationId(MessagesUtils.generateRandomStringByUUIDNoDash());
+                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.REQUEST);
                 msg.addReceiver(offerDirectorAgent);
                 try {
                     msg.setContentObject(decision);
@@ -211,8 +209,7 @@ public class PassengerAgent extends UserAgent {
                 String offerDirectorName = cancelAgreement.getOfferDirectorId();
                 AID offerDirectorAgent = new AID(offerDirectorName, AID.ISGUID);
 
-                ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-                msg.setConversationId(MessagesUtils.generateRandomStringByUUIDNoDash());
+                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.REQUEST);
                 msg.addReceiver(offerDirectorAgent);
                 try {
                     msg.setContentObject(cancelAgreement);

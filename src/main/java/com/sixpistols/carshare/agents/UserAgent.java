@@ -3,6 +3,7 @@ package com.sixpistols.carshare.agents;
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import com.sixpistols.carshare.messages.Error;
 import com.sixpistols.carshare.messages.LoginToken;
+import com.sixpistols.carshare.messages.MessagesUtils;
 import com.sixpistols.carshare.messages.UserCredentials;
 import com.sixpistols.carshare.services.ServiceType;
 import com.sixpistols.carshare.services.ServiceUtils;
@@ -60,7 +61,7 @@ public abstract class UserAgent extends LoggerAgent {
             @Override
             public void action() {
                 log.debug("Try to login");
-                ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
+                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.PROPOSE);
                 msg.addReceiver(accountVerifier);
                 try {
                     msg.setContentObject(userCredentials);
