@@ -1,5 +1,6 @@
 package com.sixpistols.carshare.agents;
 
+import com.sixpistols.carshare.behaviors.HandleRequestMessageRespond;
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import com.sixpistols.carshare.messages.Error;
 import com.sixpistols.carshare.messages.*;
@@ -172,6 +173,40 @@ public class DriverAgent extends UserAgent {
             String paymentId = paymentReport.payment.paymentId;
             log.info("get paymentReport {}", paymentId);
             paymentReports.add(paymentReport);
+        }
+    }
+
+    private void cancelOffer(final CancelOffer cancelOffer) {
+        addBehaviour(new OneShotBehaviour() {
+            @Override
+            public void action() {
+                log.info("cancel TravelOffer: {}", cancelOffer.travelOffer.offerId);
+                String offerDirectorName = cancelOffer.travelOffer.offerDirectorId;
+                AID offerDirectorAgent = new AID(offerDirectorName, AID.ISGUID);
+
+                ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+                msg.setConversationId(MessagesUtils.generateRandomStringByUUIDNoDash());
+                msg.addReceiver(offerDirectorAgent);
+                try {
+                    msg.setContentObject(cancelOffer);
+                    send(msg);
+                    addBehaviour(new HandleCancelOfferRespond(myAgent, msg));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private class HandleCancelOfferRespond extends HandleRequestMessageRespond {
+        public HandleCancelOfferRespond(Agent agent, ACLMessage msgRequest) {
+            super(agent, msgRequest);
+        }
+
+        @Override
+        protected void afterInform(ACLMessage msg) throws UnreadableException {
+            CancelOfferReport cancelOfferReport = (CancelOfferReport) msg.getContentObject();
+            log.debug("get CancelOfferReport: {}", cancelOfferReport.cancelOffer.travelOffer.offerId);
         }
     }
 }
