@@ -1,9 +1,11 @@
 package com.sixpistols.carshare.agents;
 
 import com.sixpistols.carshare.behaviors.BasicHandleRequestMessage;
+import com.sixpistols.carshare.behaviors.HandleRequestRespond;
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import com.sixpistols.carshare.messages.*;
 import com.sixpistols.carshare.services.ServiceType;
+import com.sixpistols.carshare.services.ServiceUtils;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
@@ -14,11 +16,13 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
 
 public class OffersDirectorAgent extends LoggerAgent {
+    ReceiveMessages receiveMessages;
     HashMap<String, TravelOffer> travelOfferMap;
     HashMap<String, Agreement> agreementMap;
     HashMap<String, LinkedList<String>> travelOfferToAgreementMap;
@@ -27,17 +31,17 @@ public class OffersDirectorAgent extends LoggerAgent {
     protected void setup() {
         log.info("start");
         registerServices();
+        receiveMessages = new ReceiveMessages(this);
         travelOfferMap = new HashMap<>();
         agreementMap = new HashMap<>();
         travelOfferToAgreementMap = new HashMap<>();
-        addBehaviour(new ReceiveMessages(this));
+        addBehaviour(receiveMessages);
     }
 
     private void registerServices() {
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
-        dfd.addServices(getServiceOfferMatcher());
-        dfd.addServices(getServiceAgreementManager());
+        dfd.addServices(getServiceOfferDirector());
         try {
             DFService.register(this, dfd);
         } catch (FIPAException fe) {
@@ -45,17 +49,9 @@ public class OffersDirectorAgent extends LoggerAgent {
         }
     }
 
-    private ServiceDescription getServiceOfferMatcher() {
+    private ServiceDescription getServiceOfferDirector() {
         ServiceDescription sd = new ServiceDescription();
         String type = ServiceType.OfferDirector.getType();
-        sd.setType(type);
-        sd.setName("Warsaw-" + type);
-        return sd;
-    }
-
-    private ServiceDescription getServiceAgreementManager() {
-        ServiceDescription sd = new ServiceDescription();
-        String type = ServiceType.AgreementManager.getType();
         sd.setType(type);
         sd.setName("Warsaw-" + type);
         return sd;
@@ -247,5 +243,84 @@ public class OffersDirectorAgent extends LoggerAgent {
         return new CancelOfferReport(
                 cancelOffer
         );
+    }
+
+    public void finalizeTravelOffer(String travelOfferId) {
+        addBehaviour(new OneShotBehaviour() {
+            @Override
+            public void action() {
+                log.info("finalize TravelOffer: {}", travelOfferId);
+
+                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.REQUEST);
+                AID legalAdvisorAgent = ServiceUtils.findAgent(myAgent, ServiceType.LegalAdvisor);
+                msg.addReceiver(legalAdvisorAgent);
+                try {
+                    msg.setContentObject(createAgreementData(travelOfferId));
+                    send(msg);
+                    HandleRequestRespond handleCancelAgreementRespond = new HandleAgreementDataRespond(myAgent, msg);
+                    receiveMessages.registerRespond(handleCancelAgreementRespond);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private AgreementData createAgreementData(String offerId) {
+        AgreementData agreementData = new AgreementData();
+        for (String agreementId : travelOfferToAgreementMap.get(offerId)) {
+            Agreement agreement = agreementMap.get(agreementId);
+            agreementData.getPayments().add(createPayment(agreement));
+        }
+        return agreementData;
+    }
+
+    private Payment createPayment(Agreement agreement) {
+        return new Payment(
+                agreement.getPassengerId(),
+                1,
+                Payment.payment
+        );
+    }
+
+    private class HandleAgreementDataRespond extends HandleRequestRespond {
+        PaymentReportList paymentReportList;
+
+        public HandleAgreementDataRespond(Agent agent, ACLMessage msgRequest) {
+            super(agent, msgRequest);
+        }
+
+        @Override
+        protected void afterInform(ACLMessage msg) throws UnreadableException {
+            paymentReportList = (PaymentReportList) msg.getContentObject();
+            log.debug("get PaymentReportList: {}", paymentReportList);
+        }
+
+        @Override
+        protected void afterReceivingExpectedRequestResponds(ACLMessage msg) {
+            super.afterReceivingExpectedRequestResponds(msg);
+            for (PaymentReport paymentReport : paymentReportList.getPaymentReports()) {
+                sendPaymentReport(paymentReport);
+            }
+        }
+    }
+
+    private void sendPaymentReport(final PaymentReport paymentReport) {
+        addBehaviour(new OneShotBehaviour() {
+            @Override
+            public void action() {
+                log.debug("send PaymentReport {} to: {}", paymentReport.getPaymentId(), paymentReport.getUserId());
+
+                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.INFORM);
+                AID userAgent = new AID(paymentReport.getUserId(), AID.ISGUID);
+                msg.addReceiver(userAgent);
+                try {
+                    msg.setContentObject(paymentReport);
+                    send(msg);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 }

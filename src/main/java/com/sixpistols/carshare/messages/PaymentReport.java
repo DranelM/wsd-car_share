@@ -21,4 +21,8 @@ public class PaymentReport implements java.io.Serializable {
     public String getPaymentId() {
         return payment.getPaymentId();
     }
+
+    public String getUserId() {
+        return payment.getUserId();
+    }
 }

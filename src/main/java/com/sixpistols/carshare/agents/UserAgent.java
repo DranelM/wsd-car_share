@@ -2,9 +2,7 @@ package com.sixpistols.carshare.agents;
 
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import com.sixpistols.carshare.messages.Error;
-import com.sixpistols.carshare.messages.LoginToken;
-import com.sixpistols.carshare.messages.MessagesUtils;
-import com.sixpistols.carshare.messages.UserCredentials;
+import com.sixpistols.carshare.messages.*;
 import com.sixpistols.carshare.services.ServiceType;
 import com.sixpistols.carshare.services.ServiceUtils;
 import jade.core.AID;
@@ -16,15 +14,19 @@ import jade.lang.acl.UnreadableException;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 
 public abstract class UserAgent extends LoggerAgent {
     private AID accountVerifier;
     protected LoginToken loginToken;
+    List<PaymentReport> paymentReports;
 
     @Override
     protected void setup() {
         log.info("start");
+        paymentReports = new LinkedList<>();
         addBehaviour(new FindAccountVerifierAgent(this, 1000));
     }
 
@@ -38,7 +40,7 @@ public abstract class UserAgent extends LoggerAgent {
 
         @Override
         protected void onTick() {
-            accountVerifier = ServiceUtils.findAgent(myAgent, ServiceType.AccountVerifier);
+            accountVerifier = ServiceUtils.findAgent(myAgent, ServiceType.LegalAdvisor);
 
             if (accountVerifier == null) {
                 return;
@@ -110,4 +112,27 @@ public abstract class UserAgent extends LoggerAgent {
     protected abstract void afterLoginSucceeded();
 
     protected abstract void afterLoginFailed(Error error);
+
+    protected class HandlePaymentReport extends OneShotBehaviour {
+        ACLMessage request;
+
+        public HandlePaymentReport(Agent a, ACLMessage request) {
+            super(a);
+            this.request = request;
+        }
+
+        public void action() {
+            PaymentReport paymentReport;
+            try {
+                paymentReport = (PaymentReport) request.getContentObject();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                return;
+            }
+
+            String paymentId = paymentReport.getPaymentId();
+            log.info("get paymentReport {}", paymentId);
+            paymentReports.add(paymentReport);
+        }
+    }
 }

@@ -167,6 +167,7 @@ public class PassengerAgent extends UserAgent {
                 addBehaviour(new HandleCancelOfferReport(myAgent, msg));
             } else if (content instanceof PaymentReport) {
                 log.debug("get message PaymentReport");
+                addBehaviour(new HandlePaymentReport(myAgent, msg));
             } else {
                 replyNotUnderstood(msg);
             }

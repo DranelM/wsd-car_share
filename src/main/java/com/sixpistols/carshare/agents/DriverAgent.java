@@ -15,12 +15,10 @@ import jade.lang.acl.UnreadableException;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 
 public class DriverAgent extends UserAgent {
     ReceiveMessages receiveMessages;
     HashMap<String, Agreement> agreementMap;
-    List<PaymentReport> paymentReports;
 
     @Override
     protected void setup() {
@@ -127,29 +125,6 @@ public class DriverAgent extends UserAgent {
             String agreementId = cancelAgreementReport.getAgreementId();
             agreementMap.remove(agreementId);
             log.info("cancel agreement {} by passenger", agreementId);
-        }
-    }
-
-    private class HandlePaymentReport extends OneShotBehaviour {
-        ACLMessage request;
-
-        public HandlePaymentReport(Agent a, ACLMessage request) {
-            super(a);
-            this.request = request;
-        }
-
-        public void action() {
-            PaymentReport paymentReport;
-            try {
-                paymentReport = (PaymentReport) request.getContentObject();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                return;
-            }
-
-            String paymentId = paymentReport.getPaymentId();
-            log.info("get paymentReport {}", paymentId);
-            paymentReports.add(paymentReport);
         }
     }
 
