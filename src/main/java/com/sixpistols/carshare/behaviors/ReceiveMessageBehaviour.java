@@ -65,6 +65,7 @@ public abstract class ReceiveMessageBehaviour extends CyclicBehaviour {
     }
 
     protected void replyNotUnderstood(ACLMessage msg) {
+        log.error("NotUnderstood message with conversationId: {}", msg.getConversationId());
         try {
             java.io.Serializable content = msg.getContentObject();
             ACLMessage reply = msg.createReply();

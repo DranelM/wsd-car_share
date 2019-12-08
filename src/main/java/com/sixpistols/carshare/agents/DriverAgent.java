@@ -172,7 +172,7 @@ public class DriverAgent extends UserAgent {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                log.info("post TravelOffer: {}", travelOffer.getOfferId());
+                log.info("post TravelOffer: {}", travelOffer.getTravelOfferId());
 
                 ACLMessage msg = MessagesUtils.createMessage(ACLMessage.INFORM);
                 AID offerDirectorAgent = new AID(travelOffer.getOfferDirectorId(), AID.ISGUID);

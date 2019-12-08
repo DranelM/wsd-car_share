@@ -49,7 +49,7 @@ public class Decision implements java.io.Serializable {
     }
 
     public String getOfferId() {
-        return travelOffer.getOfferId();
+        return travelOffer.getTravelOfferId();
     }
 
     public String getOfferDirectorId() {

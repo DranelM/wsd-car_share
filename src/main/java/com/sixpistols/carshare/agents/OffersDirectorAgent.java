@@ -1,8 +1,9 @@
 package com.sixpistols.carshare.agents;
 
-import com.sixpistols.carshare.behaviors.BasicHandleRequestMessage;
+import com.sixpistols.carshare.behaviors.HandleRequestMessage;
 import com.sixpistols.carshare.behaviors.HandleRequestRespond;
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
+import com.sixpistols.carshare.messages.Error;
 import com.sixpistols.carshare.messages.*;
 import com.sixpistols.carshare.services.ServiceType;
 import com.sixpistols.carshare.services.ServiceUtils;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.stream.Collectors;
 
 public class OffersDirectorAgent extends LoggerAgent {
     ReceiveMessages receiveMessages;
@@ -118,12 +120,12 @@ public class OffersDirectorAgent extends LoggerAgent {
                 return;
             }
 
-            travelOfferMap.put(travelOffer.getOfferId(), travelOffer);
-            travelOfferToAgreementMap.put(travelOffer.getOfferId(), new LinkedList<>());
+            travelOfferMap.put(travelOffer.getTravelOfferId(), travelOffer);
+            travelOfferToAgreementMap.put(travelOffer.getTravelOfferId(), new LinkedList<>());
         }
     }
 
-    private class HandleTravelRequest extends BasicHandleRequestMessage {
+    private class HandleTravelRequest extends HandleRequestMessage {
         OffersList offersList;
 
         public HandleTravelRequest(Agent agent, ACLMessage msgRequest) {
@@ -131,13 +133,14 @@ public class OffersDirectorAgent extends LoggerAgent {
         }
 
         @Override
-        protected void beforeInform() throws UnreadableException {
+        protected Boolean doRequestedWork() throws UnreadableException {
             TravelRequest travelRequest = (TravelRequest) getMsgRequest().getContentObject();
             offersList = getOffersList(travelRequest);
+            return true;
         }
 
         @Override
-        protected Serializable getContentObject() {
+        protected Serializable getInformContentObject() {
             return offersList;
         }
     }
@@ -145,11 +148,16 @@ public class OffersDirectorAgent extends LoggerAgent {
     private OffersList getOffersList(TravelRequest travelRequest) {
         log.debug("prepare OffersList");
         OffersList offersList = new OffersList();
-        offersList.getTravelOffers().addAll(travelOfferMap.values());
+        offersList.getTravelOffers().addAll(
+                travelOfferMap.values()
+                        .stream()
+                        .filter(travelOffer -> travelOffer.getStatus() == TravelOffer.Status.ACTIVE)
+                        .collect(Collectors.toList())
+        );
         return offersList;
     }
 
-    private class HandleDecisionRequest extends BasicHandleRequestMessage {
+    private class HandleDecisionRequest extends HandleRequestMessage {
         Agreement agreement;
 
         public HandleDecisionRequest(Agent agent, ACLMessage msgRequest) {
@@ -157,22 +165,50 @@ public class OffersDirectorAgent extends LoggerAgent {
         }
 
         @Override
-        protected void beforeInform() throws UnreadableException {
+        protected Boolean doRequestedWork() throws UnreadableException {
             Decision decision = (Decision) getMsgRequest().getContentObject();
+            if (!canAcceptDecision(decision)) {
+                return false;
+            }
+
             agreement = createAgreement(decision);
 
             String driverName = decision.getDriverId();
             AID driverAgent = new AID(driverName, AID.ISGUID);
             addNotifyAgent(driverAgent);
+            return true;
+        }
+
+        private boolean canAcceptDecision(Decision decision) {
+            switch (travelOfferMap.get(decision.getOfferId()).getStatus()) {
+                case ACTIVE:
+                    return true;
+                case FULL:
+                    setError(new Error("TravelOffer is FULL"));
+                    return false;
+                case FINISHED:
+                    setError(new Error("TravelOffer is FINISHED"));
+                    return false;
+                case CANCELED:
+                    setError(new Error("TravelOffer is already canceled"));
+                    return false;
+            }
+            return false;
         }
 
         @Override
-        protected Serializable getContentObject() {
+        protected Serializable getInformContentObject() {
             return agreement;
         }
     }
 
     private Agreement createAgreement(Decision decision) {
+        TravelOffer travelOffer = travelOfferMap.get(decision.getOfferId());
+        travelOffer.changeCapacity(-1);
+        if (travelOffer.getCapacity() == 0) {
+            travelOffer.setStatus(TravelOffer.Status.FULL);
+        }
+
         Agreement agreement = new Agreement(
                 decision
         );
@@ -181,7 +217,7 @@ public class OffersDirectorAgent extends LoggerAgent {
         return agreement;
     }
 
-    private class HandleCancelAgreementRequest extends BasicHandleRequestMessage {
+    private class HandleCancelAgreementRequest extends HandleRequestMessage {
         CancelAgreementReport cancelAgreementReport;
 
         public HandleCancelAgreementRequest(Agent agent, ACLMessage msgRequest) {
@@ -189,29 +225,56 @@ public class OffersDirectorAgent extends LoggerAgent {
         }
 
         @Override
-        protected void beforeInform() throws UnreadableException {
+        protected Boolean doRequestedWork() throws UnreadableException {
             CancelAgreement cancelAgreement = (CancelAgreement) getMsgRequest().getContentObject();
+            if (!canCancelAgreement(cancelAgreement)) {
+                return false;
+            }
+
             cancelAgreementReport = createCancelAgreementReport(cancelAgreement);
 
             String driverName = cancelAgreementReport.getDriverId();
             AID driverAgent = new AID(driverName, AID.ISGUID);
             addNotifyAgent(driverAgent);
+            return true;
+        }
+
+        private boolean canCancelAgreement(CancelAgreement cancelAgreement) {
+            switch (travelOfferMap.get(cancelAgreement.getOfferId()).getStatus()) {
+                case ACTIVE:
+                case FULL:
+                    return true;
+                case FINISHED:
+                    setError(new Error("TravelOffer is FINISHED"));
+                    return false;
+                case CANCELED:
+                    setError(new Error("TravelOffer is already canceled"));
+                    return false;
+            }
+            return false;
         }
 
         @Override
-        protected Serializable getContentObject() {
+        protected Serializable getInformContentObject() {
             return cancelAgreementReport;
         }
     }
 
     private CancelAgreementReport createCancelAgreementReport(CancelAgreement cancelAgreement) {
+        TravelOffer travelOffer = travelOfferMap.get(cancelAgreement.getOfferId());
+        travelOffer.changeCapacity(1);
+        if (travelOffer.getCapacity() > 0) {
+            travelOffer.setStatus(TravelOffer.Status.ACTIVE);
+        }
+
         travelOfferToAgreementMap.get(cancelAgreement.getOfferId()).remove(cancelAgreement.getAgreementId());
+
         return new CancelAgreementReport(
                 cancelAgreement
         );
     }
 
-    private class HandleCancelOfferRequest extends BasicHandleRequestMessage {
+    private class HandleCancelOfferRequest extends HandleRequestMessage {
         CancelOfferReport cancelOfferReport;
 
         public HandleCancelOfferRequest(Agent agent, ACLMessage msgRequest) {
@@ -219,8 +282,12 @@ public class OffersDirectorAgent extends LoggerAgent {
         }
 
         @Override
-        protected void beforeInform() throws UnreadableException {
+        protected Boolean doRequestedWork() throws UnreadableException {
             CancelOffer cancelOffer = (CancelOffer) getMsgRequest().getContentObject();
+            if (!canCancelOffer(cancelOffer)) {
+                return false;
+            }
+
             cancelOfferReport = createCancelOfferReport(cancelOffer);
 
             LinkedList<String> agreementIdList = travelOfferToAgreementMap.get(cancelOfferReport.getOfferId());
@@ -230,16 +297,33 @@ public class OffersDirectorAgent extends LoggerAgent {
                 AID passengerAgent = new AID(passengerName, AID.ISGUID);
                 addNotifyAgent(passengerAgent);
             }
+            return true;
+        }
+
+        private boolean canCancelOffer(CancelOffer cancelOffer) {
+            switch (travelOfferMap.get(cancelOffer.getOfferId()).getStatus()) {
+                case ACTIVE:
+                case FULL:
+                    return true;
+                case FINISHED:
+                    setError(new Error("TravelOffer is FINISHED"));
+                    return false;
+                case CANCELED:
+                    setError(new Error("TravelOffer is already canceled."));
+                    return false;
+            }
+            return false;
         }
 
         @Override
-        protected Serializable getContentObject() {
+        protected Serializable getInformContentObject() {
             return cancelOfferReport;
         }
     }
 
     private CancelOfferReport createCancelOfferReport(CancelOffer cancelOffer) {
-        travelOfferMap.remove(cancelOffer.getOfferId());
+        TravelOffer travelOffer = travelOfferMap.get(cancelOffer.getOfferId());
+        travelOffer.setStatus(TravelOffer.Status.CANCELED);
         return new CancelOfferReport(
                 cancelOffer
         );

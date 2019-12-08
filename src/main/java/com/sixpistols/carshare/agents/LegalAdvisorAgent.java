@@ -1,6 +1,6 @@
 package com.sixpistols.carshare.agents;
 
-import com.sixpistols.carshare.behaviors.BasicHandleRequestMessage;
+import com.sixpistols.carshare.behaviors.HandleRequestMessage;
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import com.sixpistols.carshare.messages.*;
 import com.sixpistols.carshare.services.ServiceType;
@@ -125,7 +125,7 @@ public class LegalAdvisorAgent extends LoggerAgent {
         }
     }
 
-    private class HandleAgreementData extends BasicHandleRequestMessage {
+    private class HandleAgreementData extends HandleRequestMessage {
         PaymentReportList paymentReportList;
 
         public HandleAgreementData(Agent agent, ACLMessage msgRequest) {
@@ -133,13 +133,14 @@ public class LegalAdvisorAgent extends LoggerAgent {
         }
 
         @Override
-        protected void beforeInform() throws UnreadableException {
+        protected Boolean doRequestedWork() throws UnreadableException {
             AgreementData agreementData = (AgreementData) getMsgRequest().getContentObject();
             paymentReportList = createPaymentReportList(agreementData);
+            return true;
         }
 
         @Override
-        protected Serializable getContentObject() {
+        protected Serializable getInformContentObject() {
             return paymentReportList;
         }
     }

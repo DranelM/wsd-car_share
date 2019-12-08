@@ -151,6 +151,12 @@ public class PassengerAgent extends UserAgent {
             agreement = (Agreement) msg.getContentObject();
             log.debug("get agreement: {}", agreement.toString());
         }
+
+        @Override
+        protected void afterFailure(ACLMessage msg) throws UnreadableException {
+            Error error = (Error) msg.getContentObject();
+            log.debug("accept TravelOffer respond failed with message: {}", error.getMessage());
+        }
     }
 
     private class ReceiveMessages extends ReceiveMessageBehaviour {
@@ -191,7 +197,7 @@ public class PassengerAgent extends UserAgent {
                 return;
             }
 
-            log.info("cancel TravelOffer {} by driver", agreement.getAgreementId());
+            log.info("cancel TravelOffer {} by driver", cancelOfferReport.getOfferId());
             agreement = null;
         }
     }

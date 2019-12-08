@@ -4,7 +4,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class TravelOffer implements java.io.Serializable {
-    private String offerId;
+    public enum Status {
+        ACTIVE,
+        FULL,
+        FINISHED,
+        CANCELED
+    }
+
+    private String travelOfferId;
     private String driverId;
     private String offerDirectorId;
     private List<Coordinate> coordinateList;
@@ -12,9 +19,10 @@ public class TravelOffer implements java.io.Serializable {
     private long endTime;
     private int capacity;
     private double price;
+    private Status status;
 
     public TravelOffer(String driverId, String offerDirectorId, long startTime, long endTime, int capacity, double price) {
-        this.offerId = MessagesUtils.generateRandomStringByUUIDNoDash();
+        this.travelOfferId = MessagesUtils.generateRandomStringByUUIDNoDash();
         this.driverId = driverId;
         this.offerDirectorId = offerDirectorId;
         this.coordinateList = new LinkedList<>();
@@ -22,12 +30,13 @@ public class TravelOffer implements java.io.Serializable {
         this.endTime = endTime;
         this.capacity = capacity;
         this.price = price;
+        this.status = Status.ACTIVE;
     }
 
     @Override
     public String toString() {
         return "TravelOffer{" +
-                "offerId='" + offerId + '\'' +
+                "travelOfferId='" + travelOfferId + '\'' +
                 ", driverId='" + driverId + '\'' +
                 ", offerDirectorId='" + offerDirectorId + '\'' +
                 ", coordinateList=" + coordinateList +
@@ -38,8 +47,8 @@ public class TravelOffer implements java.io.Serializable {
                 '}';
     }
 
-    public String getOfferId() {
-        return offerId;
+    public String getTravelOfferId() {
+        return travelOfferId;
     }
 
     public String getDriverId() {
@@ -68,5 +77,17 @@ public class TravelOffer implements java.io.Serializable {
 
     public double getPrice() {
         return price;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public void changeCapacity(int space) {
+        capacity = capacity + space;
     }
 }
