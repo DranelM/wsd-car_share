@@ -2,7 +2,6 @@ package com.sixpistols.carshare.agents;
 
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import com.sixpistols.carshare.messages.LoginToken;
-import com.sixpistols.carshare.messages.MessagesUtils;
 import com.sixpistols.carshare.messages.NewUserData;
 import com.sixpistols.carshare.messages.UserCredentials;
 import com.sixpistols.carshare.services.ServiceType;
@@ -126,10 +125,9 @@ public class LegalAdvisorAgent extends LoggerAgent {
         }
 
         private LoginToken createLoginToken(ACLMessage msg) {
-            LoginToken loginToken = new LoginToken();
-            loginToken.tokenId = MessagesUtils.generateRandomStringByUUIDNoDash();
-            loginToken.userId = msg.getSender().getName();
-            return loginToken;
+            return new LoginToken(
+                    msg.getSender().getName()
+            );
         }
     }
 }

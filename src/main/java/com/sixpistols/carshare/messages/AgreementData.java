@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class AgreementData implements java.io.Serializable {
-    public List<Payment> payments;
+    private List<Payment> payments;
 
     public AgreementData() {
         this.payments = new LinkedList<>();
@@ -15,5 +15,9 @@ public class AgreementData implements java.io.Serializable {
         return "AgreementData{" +
                 "payments=" + payments +
                 '}';
+    }
+
+    public List<Payment> getPayments() {
+        return payments;
     }
 }

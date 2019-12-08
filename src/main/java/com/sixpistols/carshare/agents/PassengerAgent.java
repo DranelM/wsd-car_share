@@ -38,28 +38,21 @@ public class PassengerAgent extends UserAgent {
     }
 
     private TravelRequest createTestingTravelRequest() {
-        TravelRequest travelRequest = new TravelRequest();
-        travelRequest.requestId = MessagesUtils.generateRandomStringByUUIDNoDash();
-        travelRequest.passengerId = getName();
-        travelRequest.coordinateList.add(createTestingCoordinate());
-        travelRequest.coordinateList.add(createTestingCoordinate());
-        travelRequest.startTime = 1;
-        travelRequest.endTime = 4;
+        TravelRequest travelRequest = new TravelRequest(
+                getName(),
+                1,
+                4
+        );
+        travelRequest.getCoordinateList().add(MessagesUtils.generateRandomCoordinate());
+        travelRequest.getCoordinateList().add(MessagesUtils.generateRandomCoordinate());
         return travelRequest;
-    }
-
-    private Coordinate createTestingCoordinate() {
-        Coordinate coordinate = new Coordinate();
-        coordinate.x = MessagesUtils.generateRandomInt(0, 5);
-        coordinate.y = MessagesUtils.generateRandomInt(0, 5);
-        return coordinate;
     }
 
     private void postTravelRequest(final TravelRequest travelRequest) {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                log.debug("post TravelRequest: {}", travelRequest.requestId);
+                log.debug("post TravelRequest: {}", travelRequest.getRequestId());
                 List<AID> offerMatcherAgents = ServiceUtils.findAgentList(myAgent, ServiceType.OfferDirector);
 
                 ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
@@ -103,8 +96,8 @@ public class PassengerAgent extends UserAgent {
                 protected void onWake() {
                     int randomInt = MessagesUtils.generateRandomInt(0, offersLists.size() - 1);
                     OffersList offersList = offersLists.get(randomInt);
-                    randomInt = MessagesUtils.generateRandomInt(0, offersList.travelOffers.size() - 1);
-                    TravelOffer travelOffer = offersList.travelOffers.get(randomInt);
+                    randomInt = MessagesUtils.generateRandomInt(0, offersList.getTravelOffers().size() - 1);
+                    TravelOffer travelOffer = offersList.getTravelOffers().get(randomInt);
                     acceptTravelOffer(createDecision(travelOffer));
                 }
             });
@@ -112,20 +105,20 @@ public class PassengerAgent extends UserAgent {
     }
 
     public Decision createDecision(final TravelOffer travelOffer) {
-        Decision decision = new Decision();
-        decision.travelOffer = travelOffer;
-        decision.passengerId = getName();
-        decision.startCoordinate = travelOffer.coordinateList.get(0);
-        decision.endCoordinate = travelOffer.coordinateList.get(travelOffer.coordinateList.size() - 1);
-        return decision;
+        return new Decision(
+                travelOffer,
+                getName(),
+                travelOffer.getCoordinateList().get(0),
+                travelOffer.getCoordinateList().get(travelOffer.getCoordinateList().size() - 1)
+        );
     }
 
     private void acceptTravelOffer(final Decision decision) {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                log.debug("accept travelOffer: {}", decision.travelOffer.offerId);
-                String name = decision.travelOffer.offerDirectorId;
+                log.debug("accept travelOffer: {}", decision.getOfferId());
+                String name = decision.getOfferDirectorId();
                 AID offerDirectorAgent = new AID(name, AID.ISGUID);
 
                 ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
@@ -156,17 +149,17 @@ public class PassengerAgent extends UserAgent {
     }
 
     public CancelAgreement createCancelAgreement(final Agreement agreement) {
-        CancelAgreement cancelAgreement = new CancelAgreement();
-        cancelAgreement.agreement = agreement;
-        return cancelAgreement;
+        return new CancelAgreement(
+                agreement
+        );
     }
 
     private void cancelAgreement(final CancelAgreement cancelAgreement) {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                log.debug("cancel agreement: {}", cancelAgreement.agreement.agreementId);
-                String offerDirectorName = cancelAgreement.agreement.decision.travelOffer.offerDirectorId;
+                log.debug("cancel agreement: {}", cancelAgreement.getAgreement());
+                String offerDirectorName = cancelAgreement.getOfferDirectorId();
                 AID offerDirectorAgent = new AID(offerDirectorName, AID.ISGUID);
 
                 ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
@@ -191,7 +184,7 @@ public class PassengerAgent extends UserAgent {
         @Override
         protected void afterInform(ACLMessage msg) throws UnreadableException {
             CancelAgreementReport cancelAgreementReport = (CancelAgreementReport) msg.getContentObject();
-            log.debug("get cancelAgreementReport: {}", cancelAgreementReport.cancelAgreement.agreement.agreementId);
+            log.debug("get cancelAgreementReport: {}", cancelAgreementReport.getAgreementId());
             agreement = null;
         }
     }

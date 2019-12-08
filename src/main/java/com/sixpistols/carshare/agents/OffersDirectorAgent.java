@@ -118,7 +118,7 @@ public class OffersDirectorAgent extends LoggerAgent {
                 return;
             }
 
-            travelOfferMap.put(travelOffer.offerId, travelOffer);
+            travelOfferMap.put(travelOffer.getOfferId(), travelOffer);
         }
     }
 
@@ -144,7 +144,7 @@ public class OffersDirectorAgent extends LoggerAgent {
     private OffersList getOffersList(TravelRequest travelRequest) {
         log.debug("prepare OffersList");
         OffersList offersList = new OffersList();
-        offersList.travelOffers.addAll(travelOfferMap.values());
+        offersList.getTravelOffers().addAll(travelOfferMap.values());
         return offersList;
     }
 
@@ -160,7 +160,7 @@ public class OffersDirectorAgent extends LoggerAgent {
             Decision decision = (Decision) getMsgRequest().getContentObject();
             agreement = createAgreement(decision);
 
-            String driverName = decision.travelOffer.driverId;
+            String driverName = decision.getDriverId();
             AID driverAgent = new AID(driverName, AID.ISGUID);
             addNotifyAgent(driverAgent);
         }
@@ -172,10 +172,10 @@ public class OffersDirectorAgent extends LoggerAgent {
     }
 
     private Agreement createAgreement(Decision decision) {
-        Agreement agreement = new Agreement();
-        agreement.agreementId = MessagesUtils.generateRandomStringByUUIDNoDash();
-        agreement.decision = decision;
-        agreementMap.put(agreement.agreementId, agreement);
+        Agreement agreement = new Agreement(
+                decision
+        );
+        agreementMap.put(agreement.getAgreementId(), agreement);
         return agreement;
     }
 
@@ -191,7 +191,7 @@ public class OffersDirectorAgent extends LoggerAgent {
             CancelAgreement cancelAgreement = (CancelAgreement) getMsgRequest().getContentObject();
             cancelAgreementReport = createCancelAgreementReport(cancelAgreement);
 
-            String driverName = cancelAgreementReport.cancelAgreement.agreement.decision.travelOffer.driverId;
+            String driverName = cancelAgreementReport.getDriverId();
             AID driverAgent = new AID(driverName, AID.ISGUID);
             addNotifyAgent(driverAgent);
         }
@@ -203,8 +203,8 @@ public class OffersDirectorAgent extends LoggerAgent {
     }
 
     private CancelAgreementReport createCancelAgreementReport(CancelAgreement cancelAgreement) {
-        CancelAgreementReport cancelAgreementReport = new CancelAgreementReport();
-        cancelAgreementReport.cancelAgreement = cancelAgreement;
-        return cancelAgreementReport;
+        return new CancelAgreementReport(
+                cancelAgreement
+        );
     }
 }

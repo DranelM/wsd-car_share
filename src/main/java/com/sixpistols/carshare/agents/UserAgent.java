@@ -12,6 +12,7 @@ import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -42,12 +43,16 @@ public abstract class UserAgent extends LoggerAgent {
                 return;
             }
             removeBehaviour(this);
-
-            UserCredentials userCredentials = new UserCredentials();
-            userCredentials.login = "login";
-            userCredentials.password = "password";
-            login(userCredentials);
+            login(createUserCredentials());
         }
+    }
+
+    @NotNull
+    private UserCredentials createUserCredentials() {
+        return new UserCredentials(
+                "login",
+                "password"
+        );
     }
 
     private void login(final UserCredentials userCredentials) {

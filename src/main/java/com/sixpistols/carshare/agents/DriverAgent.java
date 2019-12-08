@@ -44,35 +44,29 @@ public class DriverAgent extends UserAgent {
     }
 
     private TravelOffer createTestingTravelOffer() {
-        TravelOffer travelOffer = new TravelOffer();
-        travelOffer.offerId = MessagesUtils.generateRandomStringByUUIDNoDash();
-        travelOffer.driverId = getName();
-        travelOffer.coordinateList.add(createTestingCoordinate());
-        travelOffer.coordinateList.add(createTestingCoordinate());
-        travelOffer.startTime = 1;
-        travelOffer.endTime = 4;
-        travelOffer.capacity = 4;
-        travelOffer.price = 1;
+        AID offerDirectorAgent = ServiceUtils.findAgent(this, ServiceType.OfferDirector);
+        TravelOffer travelOffer = new TravelOffer(
+                getName(),
+                offerDirectorAgent.getName(),
+                1,
+                4,
+                4,
+                1
+        );
+        travelOffer.getCoordinateList().add(MessagesUtils.generateRandomCoordinate());
+        travelOffer.getCoordinateList().add(MessagesUtils.generateRandomCoordinate());
         return travelOffer;
-    }
-
-    private Coordinate createTestingCoordinate() {
-        Coordinate coordinate = new Coordinate();
-        coordinate.x = MessagesUtils.generateRandomInt(0, 5);
-        coordinate.y = MessagesUtils.generateRandomInt(0, 5);
-        return coordinate;
     }
 
     private void postTravelOffer(final TravelOffer travelOffer) {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                log.info("post TravelOffer: {}", travelOffer.offerId);
-                AID offerDirectorAgent = ServiceUtils.findAgent(myAgent, ServiceType.OfferDirector);
+                log.info("post TravelOffer: {}", travelOffer.getOfferId());
 
                 ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                AID offerDirectorAgent = new AID(travelOffer.getOfferDirectorId(), AID.ISGUID);
                 msg.addReceiver(offerDirectorAgent);
-                travelOffer.offerDirectorId = offerDirectorAgent.getName();
                 try {
                     msg.setContentObject(travelOffer);
                     send(msg);
@@ -124,7 +118,7 @@ public class DriverAgent extends UserAgent {
                 return;
             }
 
-            String agreementId = agreement.agreementId;
+            String agreementId = agreement.getAgreementId();
             agreementMap.put(agreementId, agreement);
             log.info("get agreement {}", agreementId);
         }
@@ -147,7 +141,7 @@ public class DriverAgent extends UserAgent {
                 return;
             }
 
-            String agreementId = cancelAgreementReport.cancelAgreement.agreement.agreementId;
+            String agreementId = cancelAgreementReport.getAgreementId();
             agreementMap.remove(agreementId);
             log.info("cancel agreement {} by passenger", agreementId);
         }
@@ -170,7 +164,7 @@ public class DriverAgent extends UserAgent {
                 return;
             }
 
-            String paymentId = paymentReport.payment.paymentId;
+            String paymentId = paymentReport.getPaymentId();
             log.info("get paymentReport {}", paymentId);
             paymentReports.add(paymentReport);
         }
@@ -180,8 +174,8 @@ public class DriverAgent extends UserAgent {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                log.info("cancel TravelOffer: {}", cancelOffer.travelOffer.offerId);
-                String offerDirectorName = cancelOffer.travelOffer.offerDirectorId;
+                log.info("cancel TravelOffer: {}", cancelOffer.getOfferId());
+                String offerDirectorName = cancelOffer.getOfferDirectorId();
                 AID offerDirectorAgent = new AID(offerDirectorName, AID.ISGUID);
 
                 ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
@@ -206,7 +200,7 @@ public class DriverAgent extends UserAgent {
         @Override
         protected void afterInform(ACLMessage msg) throws UnreadableException {
             CancelOfferReport cancelOfferReport = (CancelOfferReport) msg.getContentObject();
-            log.debug("get CancelOfferReport: {}", cancelOfferReport.cancelOffer.travelOffer.offerId);
+            log.debug("get CancelOfferReport: {}", cancelOfferReport.getOfferId());
         }
     }
 }

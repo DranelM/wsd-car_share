@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class OffersList implements java.io.Serializable {
-    public List<TravelOffer> travelOffers;
+    private List<TravelOffer> travelOffers;
 
     public OffersList() {
         this.travelOffers = new LinkedList<>();
@@ -15,5 +15,9 @@ public class OffersList implements java.io.Serializable {
         return "OffersList{" +
                 "travelOffers=" + travelOffers +
                 '}';
+    }
+
+    public List<TravelOffer> getTravelOffers() {
+        return travelOffers;
     }
 }
