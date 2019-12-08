@@ -71,7 +71,7 @@ public class LegalAdvisorAgent extends LoggerAgent {
         }
 
         @Override
-        protected void parseMessage(ACLMessage msg) throws UnreadableException {
+        protected void receivedNewMessage(ACLMessage msg) throws UnreadableException {
             Object content = msg.getContentObject();
 
             if (content instanceof NewUserData) {

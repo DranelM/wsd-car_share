@@ -32,4 +32,16 @@ public class Agreement implements java.io.Serializable {
     public String getOfferDirectorId() {
         return decision.getOfferDirectorId();
     }
+
+    public String getOfferId() {
+        return decision.getOfferId();
+    }
+
+    public String getPassengerId() {
+        return decision.getPassengerId();
+    }
+
+    public TravelOffer getTravelOffer() {
+        return decision.getTravelOffer();
+    }
 }

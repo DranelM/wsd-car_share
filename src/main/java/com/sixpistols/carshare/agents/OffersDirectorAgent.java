@@ -16,10 +16,12 @@ import jade.lang.acl.UnreadableException;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 public class OffersDirectorAgent extends LoggerAgent {
     HashMap<String, TravelOffer> travelOfferMap;
     HashMap<String, Agreement> agreementMap;
+    HashMap<String, LinkedList<String>> travelOfferToAgreementMap;
 
     @Override
     protected void setup() {
@@ -27,6 +29,7 @@ public class OffersDirectorAgent extends LoggerAgent {
         registerServices();
         travelOfferMap = new HashMap<>();
         agreementMap = new HashMap<>();
+        travelOfferToAgreementMap = new HashMap<>();
         addBehaviour(new ReceiveMessages(this));
     }
 
@@ -78,7 +81,7 @@ public class OffersDirectorAgent extends LoggerAgent {
         }
 
         @Override
-        protected void parseMessage(ACLMessage msg) throws UnreadableException {
+        protected void receivedNewMessage(ACLMessage msg) throws UnreadableException {
             Object content = msg.getContentObject();
 
             if (content instanceof TravelOffer) {
@@ -95,6 +98,7 @@ public class OffersDirectorAgent extends LoggerAgent {
                 addBehaviour(new HandleCancelAgreementRequest(myAgent, msg));
             } else if (content instanceof CancelOffer) {
                 log.debug("get message CancelOffer");
+                addBehaviour(new HandleCancelOfferRequest(myAgent, msg));
             } else {
                 replyNotUnderstood(msg);
             }
@@ -119,6 +123,7 @@ public class OffersDirectorAgent extends LoggerAgent {
             }
 
             travelOfferMap.put(travelOffer.getOfferId(), travelOffer);
+            travelOfferToAgreementMap.put(travelOffer.getOfferId(), new LinkedList<>());
         }
     }
 
@@ -176,6 +181,7 @@ public class OffersDirectorAgent extends LoggerAgent {
                 decision
         );
         agreementMap.put(agreement.getAgreementId(), agreement);
+        travelOfferToAgreementMap.get(agreement.getOfferId()).add(agreement.getAgreementId());
         return agreement;
     }
 
@@ -203,8 +209,43 @@ public class OffersDirectorAgent extends LoggerAgent {
     }
 
     private CancelAgreementReport createCancelAgreementReport(CancelAgreement cancelAgreement) {
+        travelOfferToAgreementMap.get(cancelAgreement.getOfferId()).remove(cancelAgreement.getAgreementId());
         return new CancelAgreementReport(
                 cancelAgreement
+        );
+    }
+
+    private class HandleCancelOfferRequest extends BasicHandleRequestMessage {
+        CancelOfferReport cancelOfferReport;
+
+        public HandleCancelOfferRequest(Agent agent, ACLMessage msgRequest) {
+            super(agent, msgRequest);
+        }
+
+        @Override
+        protected void beforeInform() throws UnreadableException {
+            CancelOffer cancelOffer = (CancelOffer) getMsgRequest().getContentObject();
+            cancelOfferReport = createCancelOfferReport(cancelOffer);
+
+            LinkedList<String> agreementIdList = travelOfferToAgreementMap.get(cancelOfferReport.getOfferId());
+            for (String agreementId : agreementIdList) {
+                Agreement agreement = agreementMap.get(agreementId);
+                String passengerName = agreement.getPassengerId();
+                AID passengerAgent = new AID(passengerName, AID.ISGUID);
+                addNotifyAgent(passengerAgent);
+            }
+        }
+
+        @Override
+        protected Serializable getContentObject() {
+            return cancelOfferReport;
+        }
+    }
+
+    private CancelOfferReport createCancelOfferReport(CancelOffer cancelOffer) {
+        travelOfferMap.remove(cancelOffer.getOfferId());
+        return new CancelOfferReport(
+                cancelOffer
         );
     }
 }

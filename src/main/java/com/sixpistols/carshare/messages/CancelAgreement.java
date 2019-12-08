@@ -29,4 +29,8 @@ public class CancelAgreement implements java.io.Serializable {
     public String getOfferDirectorId() {
         return agreement.getOfferDirectorId();
     }
+
+    public String getOfferId() {
+        return agreement.getOfferId();
+    }
 }

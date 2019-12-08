@@ -3,49 +3,28 @@ package com.sixpistols.carshare.behaviors;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
-
-public class HandleRequestMessageRespond extends ReceiveMessageBehaviour {
-    protected final Logger log = LoggerFactory.getLogger(getClass().getSimpleName());
-    private ACLMessage msgRequest;
+public class HandleRequestRespond extends HandleRespond {
     private int expectedRequestResponds;
     private int requestRespondsCounter;
 
-    public HandleRequestMessageRespond(Agent agent, ACLMessage msgRequest) {
+    public HandleRequestRespond(Agent agent, ACLMessage msgRequest) {
         this(agent, msgRequest, 1);
-        this.msgRequest = msgRequest;
     }
 
-    public HandleRequestMessageRespond(Agent agent, ACLMessage msgRequest, int expectedRequestResponds) {
-        super(agent);
-        this.msgRequest = msgRequest;
+    public HandleRequestRespond(Agent agent, ACLMessage msgRequest, int expectedRequestResponds) {
+        super(agent, msgRequest);
         this.expectedRequestResponds = expectedRequestResponds;
         requestRespondsCounter = 0;
     }
 
     @Override
-    protected void parseMessage(ACLMessage msg) throws UnreadableException {
-        if (!isCorrectConversationId(msg)) {
-            return;
-        }
-
+    protected void action(ACLMessage msg) throws UnreadableException {
         parseMessagePerformative(msg);
         increaseRequestRespondsCounter(msg);
 
         if (isReceivedExpectedRequestResponds()) {
             afterReceivingExpectedRequestResponds(msg);
-        }
-    }
-
-    private boolean isCorrectConversationId(ACLMessage msg) {
-        if (Objects.equals(msgRequest.getConversationId(), msg.getConversationId())) {
-            return true;
-        } else {
-            log.debug("conversationId not matched. {} != {}", msgRequest.getConversationId(), msg.getConversationId());
-            return false;
         }
     }
 
@@ -67,6 +46,8 @@ public class HandleRequestMessageRespond extends ReceiveMessageBehaviour {
                 log.debug("get respond: INFORM");
                 afterInform(msg);
                 break;
+            case ACLMessage.NOT_UNDERSTOOD:
+                log.debug("get respond: INFORM");
         }
     }
 
@@ -87,6 +68,7 @@ public class HandleRequestMessageRespond extends ReceiveMessageBehaviour {
             case ACLMessage.REFUSE:
             case ACLMessage.FAILURE:
             case ACLMessage.INFORM:
+            case ACLMessage.NOT_UNDERSTOOD:
                 log.debug("increaseRequestRespondsCounter");
                 requestRespondsCounter++;
                 break;
@@ -103,6 +85,6 @@ public class HandleRequestMessageRespond extends ReceiveMessageBehaviour {
     }
 
     protected void afterReceivingExpectedRequestResponds(ACLMessage msg) {
-        myAgent.removeBehaviour(this);
+        finished();
     }
 }

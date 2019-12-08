@@ -19,7 +19,7 @@ public class SampleAgent extends Agent {
 
         addBehaviour(new ReceiveMessageBehaviour(this) {
             @Override
-            protected void parseMessage(ACLMessage msg) throws UnreadableException {
+            protected void receivedNewMessage(ACLMessage msg) throws UnreadableException {
                 System.out.println("Get message " + msg);
             }
         });

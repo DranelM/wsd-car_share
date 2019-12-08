@@ -10,10 +10,6 @@ public class TravelRequest implements java.io.Serializable {
     private long startTime;
     private long endTime;
 
-    public TravelRequest() {
-        this.coordinateList = new LinkedList<>();
-    }
-
     public TravelRequest(String passengerId, long startTime, long endTime) {
         this.requestId = MessagesUtils.generateRandomStringByUUIDNoDash();
         this.passengerId = passengerId;

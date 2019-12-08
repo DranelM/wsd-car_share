@@ -1,6 +1,7 @@
 package com.sixpistols.carshare.agents;
 
-import com.sixpistols.carshare.behaviors.HandleRequestMessageRespond;
+import com.sixpistols.carshare.behaviors.HandleRequestRespond;
+import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import com.sixpistols.carshare.messages.Error;
 import com.sixpistols.carshare.messages.*;
 import com.sixpistols.carshare.services.ServiceType;
@@ -17,13 +18,20 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class PassengerAgent extends UserAgent {
+    ReceiveMessages receiveMessages;
     List<OffersList> offersLists;
     Agreement agreement;
 
     @Override
-    protected void afterLoginSucceeded() {
+    protected void setup() {
+        super.setup();
+        receiveMessages = new ReceiveMessages(this);
         offersLists = new LinkedList<>();
+    }
 
+    @Override
+    protected void afterLoginSucceeded() {
+        addBehaviour(receiveMessages);
         addBehaviour(new WakerBehaviour(this, 2000) {
             @Override
             protected void onWake() {
@@ -57,13 +65,12 @@ public class PassengerAgent extends UserAgent {
 
                 ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
                 msg.setConversationId(MessagesUtils.generateRandomStringByUUIDNoDash());
-                for (AID agent : offerMatcherAgents) {
-                    msg.addReceiver(agent);
-                }
+                offerMatcherAgents.forEach(msg::addReceiver);
                 try {
                     msg.setContentObject(travelRequest);
                     send(msg);
-                    addBehaviour(new HandleTravelRequestRespond(myAgent, msg, offerMatcherAgents.size()));
+                    HandleRequestRespond handleTravelRequestRespond = new HandleTravelRequestRespond(myAgent, msg, offerMatcherAgents.size());
+                    receiveMessages.registerRespond(handleTravelRequestRespond);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -71,7 +78,7 @@ public class PassengerAgent extends UserAgent {
         });
     }
 
-    private class HandleTravelRequestRespond extends HandleRequestMessageRespond {
+    private class HandleTravelRequestRespond extends HandleRequestRespond {
         public HandleTravelRequestRespond(Agent agent, ACLMessage msgRequest, int expectedRequestResponds) {
             super(agent, msgRequest, expectedRequestResponds);
         }
@@ -127,7 +134,8 @@ public class PassengerAgent extends UserAgent {
                 try {
                     msg.setContentObject(decision);
                     send(msg);
-                    addBehaviour(new HandleAcceptTravelOfferRespond(myAgent, msg));
+                    HandleRequestRespond handleAcceptTravelOfferRespond = new HandleAcceptTravelOfferRespond(myAgent, msg);
+                    receiveMessages.registerRespond(handleAcceptTravelOfferRespond);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -135,7 +143,7 @@ public class PassengerAgent extends UserAgent {
         });
     }
 
-    private class HandleAcceptTravelOfferRespond extends HandleRequestMessageRespond {
+    private class HandleAcceptTravelOfferRespond extends HandleRequestRespond {
         public HandleAcceptTravelOfferRespond(Agent agent, ACLMessage msgRequest) {
             super(agent, msgRequest);
         }
@@ -144,7 +152,48 @@ public class PassengerAgent extends UserAgent {
         protected void afterInform(ACLMessage msg) throws UnreadableException {
             agreement = (Agreement) msg.getContentObject();
             log.debug("get agreement: {}", agreement.toString());
-            cancelAgreement(createCancelAgreement(agreement));
+        }
+    }
+
+    private class ReceiveMessages extends ReceiveMessageBehaviour {
+        public ReceiveMessages(Agent a) {
+            super(a);
+        }
+
+        @Override
+        protected void receivedNewMessage(ACLMessage msg) throws UnreadableException {
+            Object content = msg.getContentObject();
+
+            if (content instanceof CancelOfferReport) {
+                log.debug("get message CancelOfferReport");
+                addBehaviour(new HandleCancelOfferReport(myAgent, msg));
+            } else if (content instanceof PaymentReport) {
+                log.debug("get message PaymentReport");
+            } else {
+                replyNotUnderstood(msg);
+            }
+        }
+    }
+
+    private class HandleCancelOfferReport extends OneShotBehaviour {
+        ACLMessage request;
+
+        public HandleCancelOfferReport(Agent a, ACLMessage request) {
+            super(a);
+            this.request = request;
+        }
+
+        public void action() {
+            CancelOfferReport cancelOfferReport;
+            try {
+                cancelOfferReport = (CancelOfferReport) request.getContentObject();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                return;
+            }
+
+            log.info("cancel TravelOffer {} by driver", agreement.getAgreementId());
+            agreement = null;
         }
     }
 
@@ -168,7 +217,8 @@ public class PassengerAgent extends UserAgent {
                 try {
                     msg.setContentObject(cancelAgreement);
                     send(msg);
-                    addBehaviour(new HandleCancelAgreementRespond(myAgent, msg));
+                    HandleRequestRespond handleCancelAgreementRespond = new HandleCancelAgreementRespond(myAgent, msg);
+                    receiveMessages.registerRespond(handleCancelAgreementRespond);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -176,7 +226,7 @@ public class PassengerAgent extends UserAgent {
         });
     }
 
-    private class HandleCancelAgreementRespond extends HandleRequestMessageRespond {
+    private class HandleCancelAgreementRespond extends HandleRequestRespond {
         public HandleCancelAgreementRespond(Agent agent, ACLMessage msgRequest) {
             super(agent, msgRequest);
         }

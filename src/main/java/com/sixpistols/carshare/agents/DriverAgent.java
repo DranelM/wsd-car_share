@@ -1,6 +1,6 @@
 package com.sixpistols.carshare.agents;
 
-import com.sixpistols.carshare.behaviors.HandleRequestMessageRespond;
+import com.sixpistols.carshare.behaviors.HandleRequestRespond;
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
 import com.sixpistols.carshare.messages.Error;
 import com.sixpistols.carshare.messages.*;
@@ -18,18 +18,20 @@ import java.util.HashMap;
 import java.util.List;
 
 public class DriverAgent extends UserAgent {
+    ReceiveMessages receiveMessages;
     HashMap<String, Agreement> agreementMap;
     List<PaymentReport> paymentReports;
 
     @Override
     protected void setup() {
         super.setup();
+        receiveMessages = new ReceiveMessages(this);
         agreementMap = new HashMap<>();
     }
 
     @Override
     protected void afterLoginSucceeded() {
-        addBehaviour(new ReceiveMessages(this));
+        addBehaviour(receiveMessages);
         addBehaviour(new WakerBehaviour(this, 1000) {
             @Override
             protected void onWake() {
@@ -58,32 +60,13 @@ public class DriverAgent extends UserAgent {
         return travelOffer;
     }
 
-    private void postTravelOffer(final TravelOffer travelOffer) {
-        addBehaviour(new OneShotBehaviour() {
-            @Override
-            public void action() {
-                log.info("post TravelOffer: {}", travelOffer.getOfferId());
-
-                ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-                AID offerDirectorAgent = new AID(travelOffer.getOfferDirectorId(), AID.ISGUID);
-                msg.addReceiver(offerDirectorAgent);
-                try {
-                    msg.setContentObject(travelOffer);
-                    send(msg);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
     private class ReceiveMessages extends ReceiveMessageBehaviour {
         public ReceiveMessages(Agent a) {
             super(a);
         }
 
         @Override
-        protected void parseMessage(ACLMessage msg) throws UnreadableException {
+        protected void receivedNewMessage(ACLMessage msg) throws UnreadableException {
             Object content = msg.getContentObject();
 
             if (content instanceof Agreement) {
@@ -170,6 +153,12 @@ public class DriverAgent extends UserAgent {
         }
     }
 
+    public CancelOffer createCancelOffer(final TravelOffer travelOffer) {
+        return new CancelOffer(
+                travelOffer
+        );
+    }
+
     private void cancelOffer(final CancelOffer cancelOffer) {
         addBehaviour(new OneShotBehaviour() {
             @Override
@@ -184,7 +173,8 @@ public class DriverAgent extends UserAgent {
                 try {
                     msg.setContentObject(cancelOffer);
                     send(msg);
-                    addBehaviour(new HandleCancelOfferRespond(myAgent, msg));
+                    HandleRequestRespond handleCancelOfferRespond = new HandleCancelOfferRespond(myAgent, msg);
+                    receiveMessages.registerRespond(handleCancelOfferRespond);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -192,7 +182,7 @@ public class DriverAgent extends UserAgent {
         });
     }
 
-    private class HandleCancelOfferRespond extends HandleRequestMessageRespond {
+    private class HandleCancelOfferRespond extends HandleRequestRespond {
         public HandleCancelOfferRespond(Agent agent, ACLMessage msgRequest) {
             super(agent, msgRequest);
         }
@@ -202,5 +192,24 @@ public class DriverAgent extends UserAgent {
             CancelOfferReport cancelOfferReport = (CancelOfferReport) msg.getContentObject();
             log.debug("get CancelOfferReport: {}", cancelOfferReport.getOfferId());
         }
+    }
+
+    private void postTravelOffer(final TravelOffer travelOffer) {
+        addBehaviour(new OneShotBehaviour() {
+            @Override
+            public void action() {
+                log.info("post TravelOffer: {}", travelOffer.getOfferId());
+
+                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.INFORM);
+                AID offerDirectorAgent = new AID(travelOffer.getOfferDirectorId(), AID.ISGUID);
+                msg.addReceiver(offerDirectorAgent);
+                try {
+                    msg.setContentObject(travelOffer);
+                    send(msg);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 }

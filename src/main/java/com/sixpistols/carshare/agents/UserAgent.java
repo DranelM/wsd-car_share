@@ -82,7 +82,7 @@ public abstract class UserAgent extends LoggerAgent {
         }
 
         @Override
-        protected void parseMessage(ACLMessage msg) throws UnreadableException {
+        protected void receivedNewMessage(ACLMessage msg) throws UnreadableException {
             Object content = msg.getContentObject();
 
             if (!Objects.equals(conversationId, msg.getConversationId())) {
