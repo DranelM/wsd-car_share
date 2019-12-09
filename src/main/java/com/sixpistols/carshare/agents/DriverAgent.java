@@ -60,13 +60,14 @@ public class DriverAgent extends UserAgent {
         int randomStartTime = ThreadLocalRandom.current().nextInt(1, 100);
         int randomEndTime = ThreadLocalRandom.current().nextInt(randomStartTime, 200);
         int randomCapacity=ThreadLocalRandom.current().nextInt(1, 8);
+        int randomPrice=ThreadLocalRandom.current().nextInt(1, 1000);
         TravelOffer travelOffer = new TravelOffer(
                 getName(),
                 offerDirectorAgent.getName(),
                 randomStartTime,
                 randomEndTime,
                 randomCapacity,
-                1
+                randomPrice
         );
         travelOffer.getCoordinateList().add(MessagesUtils.generateRandomCoordinate());
         travelOffer.getCoordinateList().add(MessagesUtils.generateRandomCoordinate());
