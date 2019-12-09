@@ -15,6 +15,7 @@ import jade.lang.acl.UnreadableException;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class DriverAgent extends UserAgent {
     ReceiveMessages receiveMessages;
@@ -56,11 +57,13 @@ public class DriverAgent extends UserAgent {
 
     private TravelOffer createTestingTravelOffer() {
         AID offerDirectorAgent = ServiceUtils.findAgent(this, ServiceType.OfferDirector);
+        int randomStartTime = ThreadLocalRandom.current().nextInt(1, 100);
+        int randomEndTime = ThreadLocalRandom.current().nextInt(randomStartTime, 200);
         TravelOffer travelOffer = new TravelOffer(
                 getName(),
                 offerDirectorAgent.getName(),
-                1,
-                4,
+                randomStartTime,
+                randomEndTime,
                 4,
                 1
         );
