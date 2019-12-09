@@ -38,6 +38,13 @@ public class PassengerAgent extends UserAgent {
                 postTravelRequest(createTestingTravelRequest());
             }
         });
+        // Zachowanie emuluj¹ce anulowanie oferty przez u¿ytkownika
+        addBehaviour(new WakerBehaviour(this, 20000) {
+            @Override
+            protected void onWake() {
+                cancelAgreement(createCancelAgreement(agreement));
+            }
+        });
     }
 
     @Override
