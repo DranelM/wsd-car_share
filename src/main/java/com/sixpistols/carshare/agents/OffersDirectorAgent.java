@@ -31,6 +31,7 @@ public class OffersDirectorAgent extends LoggerAgent {
     HashMap<String, TravelOffer> travelOfferMap;
     HashMap<String, Agreement> agreementMap;
     HashMap<String, LinkedList<String>> travelOfferToAgreementMap;
+    HashMap<String, WakerBehaviour> travelOfferToFinalizeBehaviour;
 
     @Override
     protected void setup() {
@@ -40,6 +41,7 @@ public class OffersDirectorAgent extends LoggerAgent {
         travelOfferMap = new HashMap<>();
         agreementMap = new HashMap<>();
         travelOfferToAgreementMap = new HashMap<>();
+        travelOfferToFinalizeBehaviour=new HashMap<>();
         addBehaviour(receiveMessages);
     }
 
@@ -196,7 +198,7 @@ public class OffersDirectorAgent extends LoggerAgent {
             AID driverAgent = new AID(driverName, AID.ISGUID);
             addNotifyAgent(driverAgent);
             // Oferta jest finalizowana na koniec przejazdu
-            addBehaviour(new WakerBehaviour(OffersDirectorAgent.this,
+            WakerBehaviour finalizeBehaviour=new WakerBehaviour(OffersDirectorAgent.this,
             		Math.max(decision.getTravelOffer().getEndTime()-System.currentTimeMillis(),1000)) {
             	@Override
             	protected void onWake() {
@@ -214,7 +216,9 @@ public class OffersDirectorAgent extends LoggerAgent {
                         break;
             		}
             	}
-			});
+			};
+            travelOfferToFinalizeBehaviour.put(decision.getOfferId(), finalizeBehaviour);
+            addBehaviour(finalizeBehaviour);
             return true;
         }
 
@@ -307,6 +311,9 @@ public class OffersDirectorAgent extends LoggerAgent {
         }
 
         travelOfferToAgreementMap.get(cancelAgreement.getOfferId()).remove(cancelAgreement.getAgreementId());
+        
+        removeBehaviour(travelOfferToFinalizeBehaviour.get(cancelAgreement.getOfferId()));
+        travelOfferToFinalizeBehaviour.remove(cancelAgreement.getOfferId());
 
         return new CancelAgreementReport(
                 cancelAgreement
