@@ -10,6 +10,7 @@ import com.sixpistols.carshare.services.ServiceUtils;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.WakerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -176,6 +177,24 @@ public class OffersDirectorAgent extends LoggerAgent {
             String driverName = decision.getDriverId();
             AID driverAgent = new AID(driverName, AID.ISGUID);
             addNotifyAgent(driverAgent);
+            // Oferta jest finalizowana na koniec przejazdu
+            addBehaviour(new WakerBehaviour(OffersDirectorAgent.this,decision.getTravelOffer().getEndTime()) {
+            	@Override
+            	protected void onWake() {
+            		switch(travelOfferMap.get(decision.getOfferId()).getStatus()) {
+            		case ACTIVE:
+                    case FULL:
+                    	finalizeTravelOffer(decision.getTravelOffer().getTravelOfferId());
+                        break;
+                    case FINISHED:
+                        setError(new Error("TravelOffer is FINISHED"));
+                        break;
+                    case CANCELED:
+                        setError(new Error("TravelOffer is already canceled"));
+                        break;
+            		}
+            	}
+			});
             return true;
         }
 
