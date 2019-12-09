@@ -19,6 +19,9 @@ import java.util.HashMap;
 public class DriverAgent extends UserAgent {
     ReceiveMessages receiveMessages;
     HashMap<String, Agreement> agreementMap;
+    
+    // Obecna oferta kierowcy - dodane napotrzeby testowania anulowania oferty
+    private TravelOffer currentTravelOffer;
 
     @Override
     protected void setup() {
@@ -30,10 +33,18 @@ public class DriverAgent extends UserAgent {
     @Override
     protected void afterLoginSucceeded() {
         addBehaviour(receiveMessages);
+        // Zachowanie emuluj¹ce tworzenie oferty przez u¿ytkownika
         addBehaviour(new WakerBehaviour(this, 1000) {
             @Override
             protected void onWake() {
                 postTravelOffer(createTestingTravelOffer());
+            }
+        });
+        // Zachowanie emuluj¹ce anulowanie oferty przez u¿ytkownika
+        addBehaviour(new WakerBehaviour(this, 10000) {
+            @Override
+            protected void onWake() {
+            	cancelOffer(createCancelOffer(currentTravelOffer));
             }
         });
     }
@@ -55,6 +66,7 @@ public class DriverAgent extends UserAgent {
         );
         travelOffer.getCoordinateList().add(MessagesUtils.generateRandomCoordinate());
         travelOffer.getCoordinateList().add(MessagesUtils.generateRandomCoordinate());
+        currentTravelOffer=travelOffer;
         return travelOffer;
     }
 
