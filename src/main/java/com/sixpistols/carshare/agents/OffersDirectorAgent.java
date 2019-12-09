@@ -150,8 +150,10 @@ public class OffersDirectorAgent extends LoggerAgent {
     
     // Zwraca odleg³oœæ od punktu startowego i koñcowego
     private double getDistance(TravelOffer travelOffer,TravelRequest travelRequest) {
-    	return Math.round(Math.sqrt(Math.pow(travelOffer.getCoordinateList().get(0).getX()-travelRequest.getCoordinateList().get(0).getX(),2)+Math.pow(travelOffer.getCoordinateList().get(0).getY()-travelRequest.getCoordinateList().get(0).getY(),2))+
-    			Math.sqrt(Math.pow(travelOffer.getCoordinateList().get(1).getX()-travelRequest.getCoordinateList().get(1).getX(),2)+Math.pow(travelOffer.getCoordinateList().get(1).getY()-travelRequest.getCoordinateList().get(1).getY(),2)));
+    	return Math.round(Math.sqrt(Math.pow(travelOffer.getCoordinateList().get(0).getX()-travelRequest.getCoordinateList().get(0).getX(),2)
+    			+Math.pow(travelOffer.getCoordinateList().get(0).getY()-travelRequest.getCoordinateList().get(0).getY(),2))+
+    			Math.sqrt(Math.pow(travelOffer.getCoordinateList().get(1).getX()-travelRequest.getCoordinateList().get(1).getX(),2)
+    					+Math.pow(travelOffer.getCoordinateList().get(1).getY()-travelRequest.getCoordinateList().get(1).getY(),2)));
     }
 
     private OffersList getOffersList(TravelRequest travelRequest) {
@@ -197,6 +199,7 @@ public class OffersDirectorAgent extends LoggerAgent {
             		case ACTIVE:
                     case FULL:
                     	finalizeTravelOffer(decision.getTravelOffer().getTravelOfferId());
+                    	agreement.getTravelOffer().setStatus(TravelOffer.Status.FINISHED);
                         break;
                     case FINISHED:
                         setError(new Error("TravelOffer is FINISHED"));
