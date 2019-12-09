@@ -8,7 +8,8 @@ class OffersDirectorAgentTest {
 
     @Test
     void setup() {
-        // TODO
+    	OffersDirectorAgent offersDirectorAgent=new OffersDirectorAgent();
+    	offersDirectorAgent.setup();
     }
 
     @Test
