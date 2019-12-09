@@ -150,10 +150,14 @@ public class OffersDirectorAgent extends LoggerAgent {
     
     // Zwraca odleg³oœæ od punktu startowego i koñcowego
     private double getDistance(TravelOffer travelOffer,TravelRequest travelRequest) {
+    	int lastTraveOfferCoordinateIndex=travelOffer.getCoordinateList().size()-1;
+    	int lastTraveRequestCoordinateIndex=travelRequest.getCoordinateList().size()-1;
     	return Math.round(Math.sqrt(Math.pow(travelOffer.getCoordinateList().get(0).getX()-travelRequest.getCoordinateList().get(0).getX(),2)
     			+Math.pow(travelOffer.getCoordinateList().get(0).getY()-travelRequest.getCoordinateList().get(0).getY(),2))+
-    			Math.sqrt(Math.pow(travelOffer.getCoordinateList().get(1).getX()-travelRequest.getCoordinateList().get(1).getX(),2)
-    					+Math.pow(travelOffer.getCoordinateList().get(1).getY()-travelRequest.getCoordinateList().get(1).getY(),2)));
+    			Math.sqrt(Math.pow(travelOffer.getCoordinateList().get(lastTraveOfferCoordinateIndex).getX()
+    					-travelRequest.getCoordinateList().get(lastTraveRequestCoordinateIndex).getX(),2)
+    					+Math.pow(travelOffer.getCoordinateList().get(lastTraveOfferCoordinateIndex).getY()
+    							-travelRequest.getCoordinateList().get(lastTraveRequestCoordinateIndex).getY(),2)));
     }
 
     private OffersList getOffersList(TravelRequest travelRequest) {
