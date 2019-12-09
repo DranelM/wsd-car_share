@@ -16,6 +16,7 @@ import jade.lang.acl.UnreadableException;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class PassengerAgent extends UserAgent {
     ReceiveMessages receiveMessages;
@@ -42,7 +43,10 @@ public class PassengerAgent extends UserAgent {
         addBehaviour(new WakerBehaviour(this, 20000) {
             @Override
             protected void onWake() {
-                cancelAgreement(createCancelAgreement(agreement));
+            	// Losowe anulowanie
+            	if(ThreadLocalRandom.current().nextInt()%4==0) {
+            		cancelAgreement(createCancelAgreement(agreement));
+            	}
             }
         });
     }

@@ -45,7 +45,18 @@ public class DriverAgent extends UserAgent {
         addBehaviour(new WakerBehaviour(this, 10000) {
             @Override
             protected void onWake() {
-            	cancelOffer(createCancelOffer(currentTravelOffer));
+            	// Losowe anulowanie
+            	if(ThreadLocalRandom.current().nextInt()%4==0) {
+            		switch(currentTravelOffer.getStatus()) {
+            		case ACTIVE:
+            		case FULL:
+            			cancelOffer(createCancelOffer(currentTravelOffer));
+            			break;
+            		case CANCELED:
+            		case FINISHED:
+            			break;
+            		}
+            	}
             }
         });
     }
