@@ -192,7 +192,8 @@ public class OffersDirectorAgent extends LoggerAgent {
             AID driverAgent = new AID(driverName, AID.ISGUID);
             addNotifyAgent(driverAgent);
             // Oferta jest finalizowana na koniec przejazdu
-            addBehaviour(new WakerBehaviour(OffersDirectorAgent.this,decision.getTravelOffer().getEndTime()) {
+            addBehaviour(new WakerBehaviour(OffersDirectorAgent.this,
+            		Math.max(decision.getTravelOffer().getEndTime()-System.currentTimeMillis(),1000)) {
             	@Override
             	protected void onWake() {
             		switch(travelOfferMap.get(decision.getOfferId()).getStatus()) {

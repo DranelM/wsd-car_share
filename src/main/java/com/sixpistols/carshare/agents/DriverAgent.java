@@ -68,8 +68,8 @@ public class DriverAgent extends UserAgent {
 
     private TravelOffer createTestingTravelOffer() {
         AID offerDirectorAgent = ServiceUtils.findAgent(this, ServiceType.OfferDirector);
-        int randomStartTime = ThreadLocalRandom.current().nextInt(1, 100);
-        int randomEndTime = ThreadLocalRandom.current().nextInt(randomStartTime, 200);
+        long randomStartTime = System.currentTimeMillis()+ThreadLocalRandom.current().nextInt(1000, 100000);
+        long randomEndTime = ThreadLocalRandom.current().nextLong(randomStartTime, randomStartTime+200000);
         int randomCapacity=ThreadLocalRandom.current().nextInt(1, 8);
         int randomPrice=ThreadLocalRandom.current().nextInt(1, 1000);
         TravelOffer travelOffer = new TravelOffer(
