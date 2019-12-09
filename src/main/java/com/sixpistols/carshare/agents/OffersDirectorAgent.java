@@ -20,8 +20,10 @@ import jade.lang.acl.UnreadableException;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class OffersDirectorAgent extends LoggerAgent {
@@ -145,6 +147,12 @@ public class OffersDirectorAgent extends LoggerAgent {
             return offersList;
         }
     }
+    
+    // Zwraca odleg³oœæ od punktu startowego i koñcowego
+    private double getDistance(TravelOffer travelOffer,TravelRequest travelRequest) {
+    	return Math.round(Math.sqrt(Math.pow(travelOffer.getCoordinateList().get(0).getX()-travelRequest.getCoordinateList().get(0).getX(),2)+Math.pow(travelOffer.getCoordinateList().get(0).getY()-travelRequest.getCoordinateList().get(0).getY(),2))+
+    			Math.sqrt(Math.pow(travelOffer.getCoordinateList().get(1).getX()-travelRequest.getCoordinateList().get(1).getX(),2)+Math.pow(travelOffer.getCoordinateList().get(1).getY()-travelRequest.getCoordinateList().get(1).getY(),2)));
+    }
 
     private OffersList getOffersList(TravelRequest travelRequest) {
         log.debug("prepare OffersList");
@@ -155,6 +163,10 @@ public class OffersDirectorAgent extends LoggerAgent {
                         .filter(travelOffer -> travelOffer.getStatus() == TravelOffer.Status.ACTIVE)
                         .collect(Collectors.toList())
         );
+        Collections.sort(offersList.getTravelOffers(), (a,b)-> (getDistance(a, travelRequest)<getDistance(b, travelRequest)?-1:1));
+        int maxReturnedOffers=10;
+        if(offersList.getTravelOffers().size()>maxReturnedOffers)
+        	offersList.getTravelOffers().subList(maxReturnedOffers, offersList.getTravelOffers().size()).clear();
         return offersList;
     }
 
