@@ -23,7 +23,6 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class OffersDirectorAgent extends LoggerAgent {
@@ -149,7 +148,7 @@ public class OffersDirectorAgent extends LoggerAgent {
             return offersList;
         }
     }
-    
+
     // Zwraca odległość od punktu startowego i końcowego
     private double getDistance(TravelOffer travelOffer,TravelRequest travelRequest) {
     	int lastTraveOfferCoordinateIndex=travelOffer.getCoordinateList().size()-1;
@@ -311,7 +310,7 @@ public class OffersDirectorAgent extends LoggerAgent {
         }
 
         travelOfferToAgreementMap.get(cancelAgreement.getOfferId()).remove(cancelAgreement.getAgreementId());
-        
+
         removeBehaviour(travelOfferToFinalizeBehaviour.get(cancelAgreement.getOfferId()));
         travelOfferToFinalizeBehaviour.remove(cancelAgreement.getOfferId());
 

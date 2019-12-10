@@ -43,10 +43,10 @@ public class PassengerAgent extends UserAgent {
         addBehaviour(new WakerBehaviour(this, 20000) {
             @Override
             protected void onWake() {
-            	// Losowe anulowanie
-            	if(ThreadLocalRandom.current().nextInt()%4==0) {
-            		cancelAgreement(createCancelAgreement(agreement));
-            	}
+                // Losowe anulowanie
+                if (ThreadLocalRandom.current().nextInt() % 4 == 0) {
+                    cancelAgreement(createCancelAgreement(agreement));
+                }
             }
         });
     }

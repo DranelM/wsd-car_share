@@ -20,7 +20,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class DriverAgent extends UserAgent {
     ReceiveMessages receiveMessages;
     HashMap<String, Agreement> agreementMap;
-    
+
     // Obecna oferta kierowcy - dodane napotrzeby testowania anulowania oferty
     private TravelOffer currentTravelOffer;
 
@@ -45,18 +45,18 @@ public class DriverAgent extends UserAgent {
         addBehaviour(new WakerBehaviour(this, 10000) {
             @Override
             protected void onWake() {
-            	// Losowe anulowanie
-            	if(ThreadLocalRandom.current().nextInt()%4==0) {
-            		switch(currentTravelOffer.getStatus()) {
-            		case ACTIVE:
-            		case FULL:
-            			cancelOffer(createCancelOffer(currentTravelOffer));
-            			break;
-            		case CANCELED:
-            		case FINISHED:
-            			break;
-            		}
-            	}
+                // Losowe anulowanie
+                if (ThreadLocalRandom.current().nextInt() % 4 == 0) {
+                    switch (currentTravelOffer.getStatus()) {
+                        case ACTIVE:
+                        case FULL:
+                            cancelOffer(createCancelOffer(currentTravelOffer));
+                            break;
+                        case CANCELED:
+                        case FINISHED:
+                            break;
+                    }
+                }
             }
         });
     }
@@ -68,10 +68,10 @@ public class DriverAgent extends UserAgent {
 
     private TravelOffer createTestingTravelOffer() {
         AID offerDirectorAgent = ServiceUtils.findAgent(this, ServiceType.OfferDirector);
-        long randomStartTime = System.currentTimeMillis()+ThreadLocalRandom.current().nextInt(1000, 100000);
-        long randomEndTime = ThreadLocalRandom.current().nextLong(randomStartTime, randomStartTime+200000);
-        int randomCapacity=ThreadLocalRandom.current().nextInt(1, 8);
-        int randomPrice=ThreadLocalRandom.current().nextInt(1, 1000);
+        long randomStartTime = System.currentTimeMillis() + ThreadLocalRandom.current().nextInt(1000, 100000);
+        long randomEndTime = ThreadLocalRandom.current().nextLong(randomStartTime, randomStartTime + 200000);
+        int randomCapacity = ThreadLocalRandom.current().nextInt(1, 8);
+        int randomPrice = ThreadLocalRandom.current().nextInt(1, 1000);
         TravelOffer travelOffer = new TravelOffer(
                 getName(),
                 offerDirectorAgent.getName(),
@@ -82,7 +82,7 @@ public class DriverAgent extends UserAgent {
         );
         travelOffer.getCoordinateList().add(MessagesUtils.generateRandomCoordinate());
         travelOffer.getCoordinateList().add(MessagesUtils.generateRandomCoordinate());
-        currentTravelOffer=travelOffer;
+        currentTravelOffer = travelOffer;
         return travelOffer;
     }
 
