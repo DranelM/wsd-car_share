@@ -19,7 +19,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class DriverAgent extends UserAgent {
     ReceiveMessages receiveMessages;
-    HashMap<String, Agreement> agreementMap;
+    private HashMap<String, Agreement> agreementMap;
 
     // Obecna oferta kierowcy - dodane napotrzeby testowania anulowania oferty
     private TravelOffer currentTravelOffer;

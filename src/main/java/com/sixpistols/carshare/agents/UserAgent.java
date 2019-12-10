@@ -21,7 +21,7 @@ import java.util.Objects;
 public abstract class UserAgent extends LoggerAgent {
     private AID accountVerifier;
     protected LoginToken loginToken;
-    List<PaymentReport> paymentReports;
+    private List<PaymentReport> paymentReports;
 
     @Override
     protected void setup() {
@@ -102,7 +102,7 @@ public abstract class UserAgent extends LoggerAgent {
                 Error error = (Error) content;
                 afterLoginFailed(error);
             } else {
-                log.error("Not understand message: {}", msg.toString());
+                log.error("Not understand message: {}", msg);
             }
 
             removeBehaviour(this);

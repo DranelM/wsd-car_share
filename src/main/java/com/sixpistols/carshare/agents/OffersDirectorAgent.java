@@ -27,10 +27,10 @@ import java.util.stream.Collectors;
 
 public class OffersDirectorAgent extends LoggerAgent {
     ReceiveMessages receiveMessages;
-    HashMap<String, TravelOffer> travelOfferMap;
-    HashMap<String, Agreement> agreementMap;
-    HashMap<String, LinkedList<String>> travelOfferToAgreementMap;
-    HashMap<String, WakerBehaviour> travelOfferToFinalizeBehaviour;
+    private HashMap<String, TravelOffer> travelOfferMap;
+    private HashMap<String, Agreement> agreementMap;
+    private HashMap<String, LinkedList<String>> travelOfferToAgreementMap;
+    private HashMap<String, WakerBehaviour> travelOfferToFinalizeBehaviour;
 
     @Override
     protected void setup() {
@@ -40,7 +40,7 @@ public class OffersDirectorAgent extends LoggerAgent {
         travelOfferMap = new HashMap<>();
         agreementMap = new HashMap<>();
         travelOfferToAgreementMap = new HashMap<>();
-        travelOfferToFinalizeBehaviour=new HashMap<>();
+        travelOfferToFinalizeBehaviour = new HashMap<>();
         addBehaviour(receiveMessages);
     }
 
@@ -150,15 +150,15 @@ public class OffersDirectorAgent extends LoggerAgent {
     }
 
     // Zwraca odległość od punktu startowego i końcowego
-    private double getDistance(TravelOffer travelOffer,TravelRequest travelRequest) {
-    	int lastTraveOfferCoordinateIndex=travelOffer.getCoordinateList().size()-1;
-    	int lastTraveRequestCoordinateIndex=travelRequest.getCoordinateList().size()-1;
-    	return Math.round(Math.sqrt(Math.pow(travelOffer.getCoordinateList().get(0).getX()-travelRequest.getCoordinateList().get(0).getX(),2)
-    			+Math.pow(travelOffer.getCoordinateList().get(0).getY()-travelRequest.getCoordinateList().get(0).getY(),2))+
-    			Math.sqrt(Math.pow(travelOffer.getCoordinateList().get(lastTraveOfferCoordinateIndex).getX()
-    					-travelRequest.getCoordinateList().get(lastTraveRequestCoordinateIndex).getX(),2)
-    					+Math.pow(travelOffer.getCoordinateList().get(lastTraveOfferCoordinateIndex).getY()
-    							-travelRequest.getCoordinateList().get(lastTraveRequestCoordinateIndex).getY(),2)));
+    private double getDistance(TravelOffer travelOffer, TravelRequest travelRequest) {
+        int lastTraveOfferCoordinateIndex = travelOffer.getCoordinateList().size() - 1;
+        int lastTraveRequestCoordinateIndex = travelRequest.getCoordinateList().size() - 1;
+        return Math.round(Math.sqrt(Math.pow(travelOffer.getCoordinateList().get(0).getX() - travelRequest.getCoordinateList().get(0).getX(), 2)
+                + Math.pow(travelOffer.getCoordinateList().get(0).getY() - travelRequest.getCoordinateList().get(0).getY(), 2)) +
+                Math.sqrt(Math.pow(travelOffer.getCoordinateList().get(lastTraveOfferCoordinateIndex).getX()
+                        - travelRequest.getCoordinateList().get(lastTraveRequestCoordinateIndex).getX(), 2)
+                        + Math.pow(travelOffer.getCoordinateList().get(lastTraveOfferCoordinateIndex).getY()
+                        - travelRequest.getCoordinateList().get(lastTraveRequestCoordinateIndex).getY(), 2)));
     }
 
     private OffersList getOffersList(TravelRequest travelRequest) {
@@ -170,10 +170,10 @@ public class OffersDirectorAgent extends LoggerAgent {
                         .filter(travelOffer -> travelOffer.getStatus() == TravelOffer.Status.ACTIVE)
                         .collect(Collectors.toList())
         );
-        Collections.sort(offersList.getTravelOffers(), (a,b)-> (getDistance(a, travelRequest)<getDistance(b, travelRequest)?-1:1));
-        int maxReturnedOffers=10;
-        if(offersList.getTravelOffers().size()>maxReturnedOffers)
-        	offersList.getTravelOffers().subList(maxReturnedOffers, offersList.getTravelOffers().size()).clear();
+        Collections.sort(offersList.getTravelOffers(), (a, b) -> (getDistance(a, travelRequest) < getDistance(b, travelRequest) ? -1 : 1));
+        int maxReturnedOffers = 10;
+        if (offersList.getTravelOffers().size() > maxReturnedOffers)
+            offersList.getTravelOffers().subList(maxReturnedOffers, offersList.getTravelOffers().size()).clear();
         return offersList;
     }
 
@@ -197,25 +197,25 @@ public class OffersDirectorAgent extends LoggerAgent {
             AID driverAgent = new AID(driverName, AID.ISGUID);
             addNotifyAgent(driverAgent);
             // Oferta jest finalizowana na koniec przejazdu
-            WakerBehaviour finalizeBehaviour=new WakerBehaviour(OffersDirectorAgent.this,
-            		Math.max(decision.getTravelOffer().getEndTime()-System.currentTimeMillis(),1000)) {
-            	@Override
-            	protected void onWake() {
-            		switch(travelOfferMap.get(decision.getOfferId()).getStatus()) {
-            		case ACTIVE:
-                    case FULL:
-                    	finalizeTravelOffer(decision.getTravelOffer().getTravelOfferId());
-                    	agreement.getTravelOffer().setStatus(TravelOffer.Status.FINISHED);
-                        break;
-                    case FINISHED:
-                        setError(new Error("TravelOffer is FINISHED"));
-                        break;
-                    case CANCELED:
-                        setError(new Error("TravelOffer is already canceled"));
-                        break;
-            		}
-            	}
-			};
+            WakerBehaviour finalizeBehaviour = new WakerBehaviour(OffersDirectorAgent.this,
+                    Math.max(decision.getTravelOffer().getEndTime() - System.currentTimeMillis(), 1000)) {
+                @Override
+                protected void onWake() {
+                    switch (travelOfferMap.get(decision.getOfferId()).getStatus()) {
+                        case ACTIVE:
+                        case FULL:
+                            finalizeTravelOffer(decision.getTravelOffer().getTravelOfferId());
+                            agreement.getTravelOffer().setStatus(TravelOffer.Status.FINISHED);
+                            break;
+                        case FINISHED:
+                            setError(new Error("TravelOffer is FINISHED"));
+                            break;
+                        case CANCELED:
+                            setError(new Error("TravelOffer is already canceled"));
+                            break;
+                    }
+                }
+            };
             travelOfferToFinalizeBehaviour.put(decision.getOfferId(), finalizeBehaviour);
             addBehaviour(finalizeBehaviour);
             return true;
