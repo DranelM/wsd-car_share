@@ -1,4 +1,4 @@
-package com.sixpistols.carshare.agents;
+ï»¿package com.sixpistols.carshare.agents;
 
 import com.sixpistols.carshare.behaviors.HandleRequestRespond;
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
@@ -39,7 +39,7 @@ public class PassengerAgent extends UserAgent {
                 postTravelRequest(createTestingTravelRequest());
             }
         });
-        // Zachowanie emuluj¹ce anulowanie oferty przez u¿ytkownika
+        // Zachowanie emulujÄ…ce anulowanie oferty przez uÅ¼ytkownika
         addBehaviour(new WakerBehaviour(this, 20000) {
             @Override
             protected void onWake() {

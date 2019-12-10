@@ -1,4 +1,4 @@
-package com.sixpistols.carshare.agents;
+ï»¿package com.sixpistols.carshare.agents;
 
 import com.sixpistols.carshare.behaviors.HandleRequestMessage;
 import com.sixpistols.carshare.behaviors.HandleRequestRespond;
@@ -150,7 +150,7 @@ public class OffersDirectorAgent extends LoggerAgent {
         }
     }
     
-    // Zwraca odleg³oœæ od punktu startowego i koñcowego
+    // Zwraca odlegÅ‚oÅ›Ä‡ od punktu startowego i koÅ„cowego
     private double getDistance(TravelOffer travelOffer,TravelRequest travelRequest) {
     	int lastTraveOfferCoordinateIndex=travelOffer.getCoordinateList().size()-1;
     	int lastTraveRequestCoordinateIndex=travelRequest.getCoordinateList().size()-1;

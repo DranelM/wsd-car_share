@@ -1,4 +1,4 @@
-package com.sixpistols.carshare.agents;
+ï»¿package com.sixpistols.carshare.agents;
 
 import com.sixpistols.carshare.behaviors.HandleRequestRespond;
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
@@ -34,14 +34,14 @@ public class DriverAgent extends UserAgent {
     @Override
     protected void afterLoginSucceeded() {
         addBehaviour(receiveMessages);
-        // Zachowanie emuluj¹ce tworzenie oferty przez u¿ytkownika
+        // Zachowanie emulujÄ…ce tworzenie oferty przez uÅ¼ytkownika
         addBehaviour(new WakerBehaviour(this, 1000) {
             @Override
             protected void onWake() {
                 postTravelOffer(createTestingTravelOffer());
             }
         });
-        // Zachowanie emuluj¹ce anulowanie oferty przez u¿ytkownika
+        // Zachowanie emulujÄ…ce anulowanie oferty przez uÅ¼ytkownika
         addBehaviour(new WakerBehaviour(this, 10000) {
             @Override
             protected void onWake() {
