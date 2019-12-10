@@ -1,4 +1,4 @@
-﻿package com.sixpistols.carshare.agents;
+package com.sixpistols.carshare.agents;
 
 import com.sixpistols.carshare.behaviors.HandleRequestRespond;
 import com.sixpistols.carshare.behaviors.ReceiveMessageBehaviour;
