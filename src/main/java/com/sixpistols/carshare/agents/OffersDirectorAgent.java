@@ -21,6 +21,7 @@ import jade.lang.acl.UnreadableException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
@@ -107,27 +108,6 @@ public class OffersDirectorAgent extends LoggerAgent {
         }
     }
 
-    public void finalizeTravelOffer(String travelOfferId) {
-        addBehaviour(new OneShotBehaviour() {
-            @Override
-            public void action() {
-                log.info("finalize TravelOffer: {}", travelOfferId);
-
-                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.REQUEST);
-                AID legalAdvisorAgent = ServiceUtils.findAgent(myAgent, ServiceType.LegalAdvisor);
-                msg.addReceiver(legalAdvisorAgent);
-                try {
-                    msg.setContentObject(createAgreementData(travelOfferId));
-                    send(msg);
-                    HandleRequestRespond handleCancelAgreementRespond = new HandleAgreementDataRespond(myAgent, msg);
-                    receiveMessages.registerRespond(handleCancelAgreementRespond);
-                } catch (IOException ex) {
-                    log.error(ex.getMessage());
-                }
-            }
-        });
-    }
-
     private class HandleTravelRequest extends HandleRequestMessage {
         OffersList offersList;
 
@@ -195,28 +175,6 @@ public class OffersDirectorAgent extends LoggerAgent {
             String driverName = decision.getDriverId();
             AID driverAgent = new AID(driverName, AID.ISGUID);
             addNotifyAgent(driverAgent);
-            // Oferta jest finalizowana na koniec przejazdu
-            WakerBehaviour finalizeBehaviour = new WakerBehaviour(OffersDirectorAgent.this,
-                    Math.max(decision.getTravelOffer().getEndTime() - System.currentTimeMillis(), 1000)) {
-                @Override
-                protected void onWake() {
-                    switch (travelOfferMap.get(decision.getOfferId()).getStatus()) {
-                        case ACTIVE:
-                        case FULL:
-                            finalizeTravelOffer(decision.getTravelOffer().getTravelOfferId());
-                            agreement.getTravelOffer().setStatus(TravelOffer.Status.FINISHED);
-                            break;
-                        case FINISHED:
-                            setError(new Error("TravelOffer is FINISHED"));
-                            break;
-                        case CANCELED:
-                            setError(new Error("TravelOffer is already canceled"));
-                            break;
-                    }
-                }
-            };
-            travelOfferToFinalizeBehaviour.put(decision.getOfferId(), finalizeBehaviour);
-            addBehaviour(finalizeBehaviour);
             return true;
         }
 
@@ -310,9 +268,6 @@ public class OffersDirectorAgent extends LoggerAgent {
 
         travelOfferToAgreementMap.get(cancelAgreement.getOfferId()).remove(cancelAgreement.getAgreementId());
 
-        removeBehaviour(travelOfferToFinalizeBehaviour.get(cancelAgreement.getOfferId()));
-        travelOfferToFinalizeBehaviour.remove(cancelAgreement.getOfferId());
-
         return new CancelAgreementReport(
                 cancelAgreement
         );
@@ -368,6 +323,9 @@ public class OffersDirectorAgent extends LoggerAgent {
     private CancelOfferReport createCancelOfferReport(CancelOffer cancelOffer) {
         TravelOffer travelOffer = travelOfferMap.get(cancelOffer.getOfferId());
         travelOffer.setStatus(TravelOffer.Status.CANCELED);
+
+        removeBehaviour(travelOfferToFinalizeBehaviour.get(cancelOffer.getOfferId()));
+        travelOfferToFinalizeBehaviour.remove(cancelOffer.getOfferId());
         return new CancelOfferReport(
                 cancelOffer
         );
@@ -450,6 +408,64 @@ public class OffersDirectorAgent extends LoggerAgent {
 
             travelOfferMap.put(travelOffer.getTravelOfferId(), travelOffer);
             travelOfferToAgreementMap.put(travelOffer.getTravelOfferId(), new LinkedList<>());
+            createPostFinalizeBehaviour(travelOffer);
         }
+    }
+
+    private void createPostFinalizeBehaviour(final TravelOffer travelOffer) {
+        // Oferta jest finalizowana na koniec przejazdu
+        long endTime = travelOffer.getEndTime() - System.currentTimeMillis();
+        log.debug("run finalize TravelOffer {} at: {} (after {}s)", travelOffer.getTravelOfferId(),
+                new Date(travelOffer.getEndTime()), endTime);
+        WakerBehaviour finalizeBehaviour = new PostFinalizeBehaviour(this, endTime, travelOffer);
+        travelOfferToFinalizeBehaviour.put(travelOffer.getTravelOfferId(), finalizeBehaviour);
+        addBehaviour(finalizeBehaviour);
+    }
+
+    private class PostFinalizeBehaviour extends WakerBehaviour {
+        final TravelOffer travelOffer;
+
+        public PostFinalizeBehaviour(Agent a, long timeout, TravelOffer travelOffer) {
+            super(a, timeout);
+            this.travelOffer = travelOffer;
+        }
+
+        @Override
+        protected void onWake() {
+            switch (travelOffer.getStatus()) {
+                case ACTIVE:
+                case FULL:
+                    travelOffer.setStatus(TravelOffer.Status.FINISHED);
+                    finalizeTravelOffer(travelOffer.getTravelOfferId());
+                    break;
+                case FINISHED:
+                    log.debug("TravelOffer is FINISHED");
+                    break;
+                case CANCELED:
+                    log.debug("TravelOffer is already canceled");
+                    break;
+            }
+        }
+    }
+
+    private void finalizeTravelOffer(String travelOfferId) {
+        addBehaviour(new OneShotBehaviour() {
+            @Override
+            public void action() {
+                log.info("finalize TravelOffer: {}", travelOfferId);
+
+                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.REQUEST);
+                AID legalAdvisorAgent = ServiceUtils.findAgent(myAgent, ServiceType.LegalAdvisor);
+                msg.addReceiver(legalAdvisorAgent);
+                try {
+                    msg.setContentObject(createAgreementData(travelOfferId));
+                    send(msg);
+                    HandleRequestRespond handleCancelAgreementRespond = new HandleAgreementDataRespond(myAgent, msg);
+                    receiveMessages.registerRespond(handleCancelAgreementRespond);
+                } catch (IOException ex) {
+                    log.error(ex.getMessage());
+                }
+            }
+        });
     }
 }

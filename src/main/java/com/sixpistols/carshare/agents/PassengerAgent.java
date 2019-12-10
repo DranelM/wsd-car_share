@@ -39,16 +39,6 @@ public class PassengerAgent extends UserAgent {
                 postTravelRequest(createTestingTravelRequest());
             }
         });
-        // Zachowanie emulujące anulowanie oferty przez użytkownika
-        addBehaviour(new WakerBehaviour(this, 20000) {
-            @Override
-            protected void onWake() {
-                // Losowe anulowanie
-                if (ThreadLocalRandom.current().nextInt() % 4 == 0) {
-                    cancelAgreement(createCancelAgreement(agreement));
-                }
-            }
-        });
     }
 
     @Override
@@ -161,6 +151,7 @@ public class PassengerAgent extends UserAgent {
         protected void afterInform(ACLMessage msg) throws UnreadableException {
             agreement = (Agreement) msg.getContentObject();
             log.debug("get agreement: {}", agreement.toString());
+            randomlyCancelAgreement();
         }
 
         @Override
@@ -168,6 +159,19 @@ public class PassengerAgent extends UserAgent {
             Error error = (Error) msg.getContentObject();
             log.debug("accept TravelOffer respond failed with message: {}", error.getMessage());
         }
+    }
+
+    private void randomlyCancelAgreement() {
+        // Zachowanie emulujące anulowanie oferty przez użytkownika
+        addBehaviour(new WakerBehaviour(this, 1000) {
+            @Override
+            protected void onWake() {
+                // Losowe anulowanie
+                if (ThreadLocalRandom.current().nextInt() % 4 == 0 && agreement != null) {
+                    cancelAgreement(createCancelAgreement(agreement));
+                }
+            }
+        });
     }
 
     private class ReceiveMessages extends ReceiveMessageBehaviour {
