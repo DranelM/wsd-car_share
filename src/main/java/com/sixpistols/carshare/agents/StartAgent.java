@@ -26,8 +26,8 @@ public class StartAgent extends LoggerAgent {
                 AgentController agentController = agentContainer.createNewAgent(name, path, null);
                 agentController.start();
             }
-        } catch (StaleProxyException e) {
-            e.printStackTrace();
+        } catch (StaleProxyException ex) {
+            log.error(ex.getMessage());
         }
     }
 }

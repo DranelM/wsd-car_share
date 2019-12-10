@@ -51,7 +51,7 @@ public class OffersDirectorAgent extends LoggerAgent {
         try {
             DFService.register(this, dfd);
         } catch (FIPAException fe) {
-            fe.printStackTrace();
+            log.error(fe.getMessage());
         }
     }
 
@@ -73,7 +73,7 @@ public class OffersDirectorAgent extends LoggerAgent {
         try {
             DFService.deregister(this);
         } catch (FIPAException fe) {
-            fe.printStackTrace();
+            log.error(fe.getMessage());
         }
     }
 
@@ -107,26 +107,25 @@ public class OffersDirectorAgent extends LoggerAgent {
         }
     }
 
-    private class HandleTravelOffer extends OneShotBehaviour {
-        ACLMessage request;
+    public void finalizeTravelOffer(String travelOfferId) {
+        addBehaviour(new OneShotBehaviour() {
+            @Override
+            public void action() {
+                log.info("finalize TravelOffer: {}", travelOfferId);
 
-        public HandleTravelOffer(Agent a, ACLMessage request) {
-            super(a);
-            this.request = request;
-        }
-
-        public void action() {
-            TravelOffer travelOffer;
-            try {
-                travelOffer = (TravelOffer) request.getContentObject();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                return;
+                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.REQUEST);
+                AID legalAdvisorAgent = ServiceUtils.findAgent(myAgent, ServiceType.LegalAdvisor);
+                msg.addReceiver(legalAdvisorAgent);
+                try {
+                    msg.setContentObject(createAgreementData(travelOfferId));
+                    send(msg);
+                    HandleRequestRespond handleCancelAgreementRespond = new HandleAgreementDataRespond(myAgent, msg);
+                    receiveMessages.registerRespond(handleCancelAgreementRespond);
+                } catch (IOException ex) {
+                    log.error(ex.getMessage());
+                }
             }
-
-            travelOfferMap.put(travelOffer.getTravelOfferId(), travelOffer);
-            travelOfferToAgreementMap.put(travelOffer.getTravelOfferId(), new LinkedList<>());
-        }
+        });
     }
 
     private class HandleTravelRequest extends HandleRequestMessage {
@@ -374,22 +373,20 @@ public class OffersDirectorAgent extends LoggerAgent {
         );
     }
 
-    public void finalizeTravelOffer(String travelOfferId) {
+    private void sendPaymentReport(final PaymentReport paymentReport) {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                log.info("finalize TravelOffer: {}", travelOfferId);
+                log.debug("send PaymentReport {} to: {}", paymentReport.getPaymentId(), paymentReport.getUserId());
 
-                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.REQUEST);
-                AID legalAdvisorAgent = ServiceUtils.findAgent(myAgent, ServiceType.LegalAdvisor);
-                msg.addReceiver(legalAdvisorAgent);
+                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.INFORM);
+                AID userAgent = new AID(paymentReport.getUserId(), AID.ISGUID);
+                msg.addReceiver(userAgent);
                 try {
-                    msg.setContentObject(createAgreementData(travelOfferId));
+                    msg.setContentObject(paymentReport);
                     send(msg);
-                    HandleRequestRespond handleCancelAgreementRespond = new HandleAgreementDataRespond(myAgent, msg);
-                    receiveMessages.registerRespond(handleCancelAgreementRespond);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (IOException ex) {
+                    log.error(ex.getMessage());
                 }
             }
         });
@@ -434,22 +431,25 @@ public class OffersDirectorAgent extends LoggerAgent {
         }
     }
 
-    private void sendPaymentReport(final PaymentReport paymentReport) {
-        addBehaviour(new OneShotBehaviour() {
-            @Override
-            public void action() {
-                log.debug("send PaymentReport {} to: {}", paymentReport.getPaymentId(), paymentReport.getUserId());
+    private class HandleTravelOffer extends OneShotBehaviour {
+        ACLMessage request;
 
-                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.INFORM);
-                AID userAgent = new AID(paymentReport.getUserId(), AID.ISGUID);
-                msg.addReceiver(userAgent);
-                try {
-                    msg.setContentObject(paymentReport);
-                    send(msg);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        public HandleTravelOffer(Agent a, ACLMessage request) {
+            super(a);
+            this.request = request;
+        }
+
+        public void action() {
+            TravelOffer travelOffer;
+            try {
+                travelOffer = (TravelOffer) request.getContentObject();
+            } catch (Exception ex) {
+                log.error(ex.getMessage());
+                return;
             }
-        });
+
+            travelOfferMap.put(travelOffer.getTravelOfferId(), travelOffer);
+            travelOfferToAgreementMap.put(travelOffer.getTravelOfferId(), new LinkedList<>());
+        }
     }
 }

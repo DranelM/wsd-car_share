@@ -20,7 +20,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class PassengerAgent extends UserAgent {
     ReceiveMessages receiveMessages;
-    List<OffersList> offersLists;
+    private List<OffersList> offersLists;
     Agreement agreement;
 
     @Override
@@ -81,8 +81,8 @@ public class PassengerAgent extends UserAgent {
                     send(msg);
                     HandleRequestRespond handleTravelRequestRespond = new HandleTravelRequestRespond(myAgent, msg, offerMatcherAgents.size());
                     receiveMessages.registerRespond(handleTravelRequestRespond);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (IOException ex) {
+                    log.error(ex.getMessage());
                 }
             }
         });
@@ -145,8 +145,8 @@ public class PassengerAgent extends UserAgent {
                     send(msg);
                     HandleRequestRespond handleAcceptTravelOfferRespond = new HandleAcceptTravelOfferRespond(myAgent, msg);
                     receiveMessages.registerRespond(handleAcceptTravelOfferRespond);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (IOException ex) {
+                    log.error(ex.getMessage());
                 }
             }
         });
@@ -191,34 +191,6 @@ public class PassengerAgent extends UserAgent {
         }
     }
 
-    private class HandleCancelOfferReport extends OneShotBehaviour {
-        ACLMessage request;
-
-        public HandleCancelOfferReport(Agent a, ACLMessage request) {
-            super(a);
-            this.request = request;
-        }
-
-        public void action() {
-            CancelOfferReport cancelOfferReport;
-            try {
-                cancelOfferReport = (CancelOfferReport) request.getContentObject();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                return;
-            }
-
-            log.info("cancel TravelOffer {} by driver", cancelOfferReport.getOfferId());
-            agreement = null;
-        }
-    }
-
-    public CancelAgreement createCancelAgreement(final Agreement agreement) {
-        return new CancelAgreement(
-                agreement
-        );
-    }
-
     private void cancelAgreement(final CancelAgreement cancelAgreement) {
         addBehaviour(new OneShotBehaviour() {
             @Override
@@ -234,11 +206,39 @@ public class PassengerAgent extends UserAgent {
                     send(msg);
                     HandleRequestRespond handleCancelAgreementRespond = new HandleCancelAgreementRespond(myAgent, msg);
                     receiveMessages.registerRespond(handleCancelAgreementRespond);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (IOException ex) {
+                    log.error(ex.getMessage());
                 }
             }
         });
+    }
+
+    public CancelAgreement createCancelAgreement(final Agreement agreement) {
+        return new CancelAgreement(
+                agreement
+        );
+    }
+
+    private class HandleCancelOfferReport extends OneShotBehaviour {
+        ACLMessage request;
+
+        public HandleCancelOfferReport(Agent a, ACLMessage request) {
+            super(a);
+            this.request = request;
+        }
+
+        public void action() {
+            CancelOfferReport cancelOfferReport;
+            try {
+                cancelOfferReport = (CancelOfferReport) request.getContentObject();
+            } catch (Exception ex) {
+                log.error(ex.getMessage());
+                return;
+            }
+
+            log.info("cancel TravelOffer {} by driver", cancelOfferReport.getOfferId());
+            agreement = null;
+        }
     }
 
     private class HandleCancelAgreementRespond extends HandleRequestRespond {

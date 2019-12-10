@@ -110,6 +110,53 @@ public class DriverAgent extends UserAgent {
         }
     }
 
+    private void cancelOffer(final CancelOffer cancelOffer) {
+        addBehaviour(new OneShotBehaviour() {
+            @Override
+            public void action() {
+                log.info("cancel TravelOffer: {}", cancelOffer.getOfferId());
+                String offerDirectorName = cancelOffer.getOfferDirectorId();
+                AID offerDirectorAgent = new AID(offerDirectorName, AID.ISGUID);
+
+                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.REQUEST);
+                msg.addReceiver(offerDirectorAgent);
+                try {
+                    msg.setContentObject(cancelOffer);
+                    send(msg);
+                    HandleRequestRespond handleCancelOfferRespond = new HandleCancelOfferRespond(myAgent, msg);
+                    receiveMessages.registerRespond(handleCancelOfferRespond);
+                } catch (IOException ex) {
+                    log.error(ex.getMessage());
+                }
+            }
+        });
+    }
+
+    private void postTravelOffer(final TravelOffer travelOffer) {
+        addBehaviour(new OneShotBehaviour() {
+            @Override
+            public void action() {
+                log.info("post TravelOffer: {}", travelOffer.getTravelOfferId());
+
+                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.INFORM);
+                AID offerDirectorAgent = new AID(travelOffer.getOfferDirectorId(), AID.ISGUID);
+                msg.addReceiver(offerDirectorAgent);
+                try {
+                    msg.setContentObject(travelOffer);
+                    send(msg);
+                } catch (IOException ex) {
+                    log.error(ex.getMessage());
+                }
+            }
+        });
+    }
+
+    public CancelOffer createCancelOffer(final TravelOffer travelOffer) {
+        return new CancelOffer(
+                travelOffer
+        );
+    }
+
     private class HandleAgreement extends OneShotBehaviour {
         ACLMessage request;
 
@@ -123,13 +170,25 @@ public class DriverAgent extends UserAgent {
             try {
                 agreement = (Agreement) request.getContentObject();
             } catch (Exception ex) {
-                ex.printStackTrace();
+                log.error(ex.getMessage());
                 return;
             }
 
             String agreementId = agreement.getAgreementId();
             agreementMap.put(agreementId, agreement);
             log.info("get agreement {}", agreementId);
+        }
+    }
+
+    private class HandleCancelOfferRespond extends HandleRequestRespond {
+        public HandleCancelOfferRespond(Agent agent, ACLMessage msgRequest) {
+            super(agent, msgRequest);
+        }
+
+        @Override
+        protected void afterInform(ACLMessage msg) throws UnreadableException {
+            CancelOfferReport cancelOfferReport = (CancelOfferReport) msg.getContentObject();
+            log.debug("get CancelOfferReport: {}", cancelOfferReport.getOfferId());
         }
     }
 
@@ -146,7 +205,7 @@ public class DriverAgent extends UserAgent {
             try {
                 cancelAgreementReport = (CancelAgreementReport) request.getContentObject();
             } catch (Exception ex) {
-                ex.printStackTrace();
+                log.error(ex.getMessage());
                 return;
             }
 
@@ -154,64 +213,5 @@ public class DriverAgent extends UserAgent {
             agreementMap.remove(agreementId);
             log.info("cancel agreement {} by passenger", agreementId);
         }
-    }
-
-    public CancelOffer createCancelOffer(final TravelOffer travelOffer) {
-        return new CancelOffer(
-                travelOffer
-        );
-    }
-
-    private void cancelOffer(final CancelOffer cancelOffer) {
-        addBehaviour(new OneShotBehaviour() {
-            @Override
-            public void action() {
-                log.info("cancel TravelOffer: {}", cancelOffer.getOfferId());
-                String offerDirectorName = cancelOffer.getOfferDirectorId();
-                AID offerDirectorAgent = new AID(offerDirectorName, AID.ISGUID);
-
-                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.REQUEST);
-                msg.addReceiver(offerDirectorAgent);
-                try {
-                    msg.setContentObject(cancelOffer);
-                    send(msg);
-                    HandleRequestRespond handleCancelOfferRespond = new HandleCancelOfferRespond(myAgent, msg);
-                    receiveMessages.registerRespond(handleCancelOfferRespond);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    private class HandleCancelOfferRespond extends HandleRequestRespond {
-        public HandleCancelOfferRespond(Agent agent, ACLMessage msgRequest) {
-            super(agent, msgRequest);
-        }
-
-        @Override
-        protected void afterInform(ACLMessage msg) throws UnreadableException {
-            CancelOfferReport cancelOfferReport = (CancelOfferReport) msg.getContentObject();
-            log.debug("get CancelOfferReport: {}", cancelOfferReport.getOfferId());
-        }
-    }
-
-    private void postTravelOffer(final TravelOffer travelOffer) {
-        addBehaviour(new OneShotBehaviour() {
-            @Override
-            public void action() {
-                log.info("post TravelOffer: {}", travelOffer.getTravelOfferId());
-
-                ACLMessage msg = MessagesUtils.createMessage(ACLMessage.INFORM);
-                AID offerDirectorAgent = new AID(travelOffer.getOfferDirectorId(), AID.ISGUID);
-                msg.addReceiver(offerDirectorAgent);
-                try {
-                    msg.setContentObject(travelOffer);
-                    send(msg);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
     }
 }

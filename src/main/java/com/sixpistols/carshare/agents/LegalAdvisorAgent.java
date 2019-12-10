@@ -31,7 +31,7 @@ public class LegalAdvisorAgent extends LoggerAgent {
         try {
             DFService.register(this, dfd);
         } catch (FIPAException fe) {
-            fe.printStackTrace();
+            log.error(fe.getMessage());
         }
     }
 
@@ -53,7 +53,7 @@ public class LegalAdvisorAgent extends LoggerAgent {
         try {
             DFService.deregister(this);
         } catch (FIPAException fe) {
-            fe.printStackTrace();
+            log.error(fe.getMessage());
         }
     }
 
@@ -93,7 +93,7 @@ public class LegalAdvisorAgent extends LoggerAgent {
                 reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
                 send(reply);
             } catch (Exception ex) {
-                ex.printStackTrace();
+                log.error(ex.getMessage());
             }
         }
     }
@@ -114,7 +114,7 @@ public class LegalAdvisorAgent extends LoggerAgent {
                 reply.setContentObject(createLoginToken(request));
                 send(reply);
             } catch (Exception ex) {
-                ex.printStackTrace();
+                log.error(ex.getMessage());
             }
         }
 

@@ -69,8 +69,8 @@ public abstract class UserAgent extends LoggerAgent {
                     msg.setContentObject(userCredentials);
                     send(msg);
                     addBehaviour(new HandleLoginRespond(myAgent, msg.getConversationId()));
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (IOException ex) {
+                    log.error(ex.getMessage());
                 }
             }
         });
@@ -126,7 +126,7 @@ public abstract class UserAgent extends LoggerAgent {
             try {
                 paymentReport = (PaymentReport) request.getContentObject();
             } catch (Exception ex) {
-                ex.printStackTrace();
+                log.error(ex.getMessage());
                 return;
             }
 
