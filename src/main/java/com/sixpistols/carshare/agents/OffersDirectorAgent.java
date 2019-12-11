@@ -189,7 +189,7 @@ public class OffersDirectorAgent extends LoggerAgent {
                     setError(new Error("TravelOffer is FINISHED"));
                     return false;
                 case CANCELED:
-                    setError(new Error("TravelOffer is already canceled"));
+                    setError(new Error("TravelOffer is CANCELED"));
                     return false;
             }
             return false;
@@ -247,7 +247,7 @@ public class OffersDirectorAgent extends LoggerAgent {
                     setError(new Error("TravelOffer is FINISHED"));
                     return false;
                 case CANCELED:
-                    setError(new Error("TravelOffer is already canceled"));
+                    setError(new Error("TravelOffer is CANCELED"));
                     return false;
             }
             return false;
@@ -308,7 +308,7 @@ public class OffersDirectorAgent extends LoggerAgent {
                     setError(new Error("TravelOffer is FINISHED"));
                     return false;
                 case CANCELED:
-                    setError(new Error("TravelOffer is already canceled."));
+                    setError(new Error("TravelOffer is CANCELED."));
                     return false;
             }
             return false;
@@ -442,7 +442,7 @@ public class OffersDirectorAgent extends LoggerAgent {
                     log.debug("TravelOffer is FINISHED");
                     break;
                 case CANCELED:
-                    log.debug("TravelOffer is already canceled");
+                    log.debug("TravelOffer is CANCELED");
                     break;
             }
         }

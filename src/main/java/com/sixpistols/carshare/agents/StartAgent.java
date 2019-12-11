@@ -13,8 +13,8 @@ public class StartAgent extends LoggerAgent {
         agentContainer = getContainerController();
         createNewAgents(LegalAdvisorAgent.class, 1);
         createNewAgents(OffersDirectorAgent.class, 1);
-        createNewAgents(DriverAgent.class, 2);
-        createNewAgents(PassengerAgent.class, 1);
+        createNewAgents(DriverAgent.class, 8);
+        createNewAgents(PassengerAgent.class, 4);
     }
 
     private void createNewAgents(Class c, int size) {

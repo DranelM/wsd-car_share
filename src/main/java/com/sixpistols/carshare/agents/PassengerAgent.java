@@ -61,7 +61,7 @@ public class PassengerAgent extends UserAgent {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                log.debug("post TravelRequest: {}", travelRequest.getRequestId());
+                log.info("post TravelRequest: {}", travelRequest.getRequestId());
                 List<AID> offerMatcherAgents = ServiceUtils.findAgentList(myAgent, ServiceType.OfferDirector);
 
                 ACLMessage msg = MessagesUtils.createMessage(ACLMessage.REQUEST);
@@ -124,7 +124,7 @@ public class PassengerAgent extends UserAgent {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                log.debug("accept travelOffer: {}", decision.getOfferId());
+                log.info("accept TravelOffer: {}", decision.getOfferId());
                 String name = decision.getOfferDirectorId();
                 AID offerDirectorAgent = new AID(name, AID.ISGUID);
 
@@ -151,13 +151,14 @@ public class PassengerAgent extends UserAgent {
         protected void afterInform(ACLMessage msg) throws UnreadableException {
             agreement = (Agreement) msg.getContentObject();
             log.debug("get agreement: {}", agreement.toString());
+            log.info("get Agreement {} for TravelOffer: {}", agreement.getAgreementId(), agreement.getOfferId());
             randomlyCancelAgreement();
         }
 
         @Override
         protected void afterFailure(ACLMessage msg) throws UnreadableException {
             Error error = (Error) msg.getContentObject();
-            log.debug("accept TravelOffer respond failed with message: {}", error.getMessage());
+            log.info("accept TravelOffer respond failed with message: {}", error.getMessage());
         }
     }
 
@@ -199,7 +200,7 @@ public class PassengerAgent extends UserAgent {
         addBehaviour(new OneShotBehaviour() {
             @Override
             public void action() {
-                log.debug("cancel agreement: {}", cancelAgreement.getAgreement());
+                log.info("cancel Agreement for TravelOffer: {}", cancelAgreement.getOfferId());
                 String offerDirectorName = cancelAgreement.getOfferDirectorId();
                 AID offerDirectorAgent = new AID(offerDirectorName, AID.ISGUID);
 
