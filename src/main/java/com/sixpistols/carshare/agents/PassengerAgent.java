@@ -156,9 +156,13 @@ public class PassengerAgent extends UserAgent {
         }
 
         @Override
-        protected void afterFailure(ACLMessage msg) throws UnreadableException {
-            Error error = (Error) msg.getContentObject();
-            log.info("accept TravelOffer respond failed with message: {}", error.getMessage());
+        protected void afterFailure(ACLMessage msg) {
+            try {
+                Error error = (Error) msg.getContentObject();
+                log.info("accept TravelOffer respond failed with message: {}", error.getMessage());
+            } catch (UnreadableException e) {
+                log.debug("accept TravelOffer respond failed with message that cannot be read", e);
+            }
         }
     }
 

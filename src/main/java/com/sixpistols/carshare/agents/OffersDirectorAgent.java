@@ -192,6 +192,7 @@ public class OffersDirectorAgent extends LoggerAgent {
                     setError(new Error("TravelOffer is CANCELED"));
                     return false;
             }
+            setError(new Error("TravelOffer status UNKNOWN"));
             return false;
         }
 
@@ -250,6 +251,7 @@ public class OffersDirectorAgent extends LoggerAgent {
                     setError(new Error("TravelOffer is CANCELED"));
                     return false;
             }
+            setError(new Error("TravelOffer status UNKNOWN"));
             return false;
         }
 
@@ -311,6 +313,7 @@ public class OffersDirectorAgent extends LoggerAgent {
                     setError(new Error("TravelOffer is CANCELED."));
                     return false;
             }
+            setError(new Error("TravelOffer status UNKNOWN"));
             return false;
         }
 
